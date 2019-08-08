@@ -2,6 +2,7 @@
 File: keyboard_OL.py
 Author: Thomas Woodruff
 Date: 4/22/19
+Revision: 0.1.1
 Description: Reads value from keyboard and passes commands
              to the car.
 """
@@ -10,12 +11,12 @@ from moco import MotorController, Accel
 import sys
 
 class KC:
-    
+
     def __init__(self, car):
         self.mc = car
         self.move = Accel(car)
         self.called = False
-    
+
     def forward(self):
         '''
         ramp function to full speed
@@ -34,8 +35,8 @@ class KC:
 ##                else:
 ##                    move.stop()
         self.move.stop()
-        
-    def backward(self):
+
+    def backward(self):                                                         #has a bug that needs to be id then fixed
         '''
         ramp function down to 0
         '''
@@ -43,25 +44,25 @@ class KC:
         self.move.rampSpd(0, -0.56) #car will run for ~1.5s
         self.move.rampSpd(-0.56)
         self.move.stop()
-        
+
     def left(self):
         print("Left")
         self.mc.setSteer(-15)
         self.move.rampSpd(0, 0.42)
         self.move.rampSpd(-0.42)
         self.move.stop()
-        
+
     def right(self):
         print("Right")
         self.mc.setSteer(15)
         self.move.rampSpd(0, 0.42)
         self.move.rampSpd(-0.42)
         self.move.stop()
-        
+
     def quit(self):
         self.mc.shutdown()
         sys.exit()
-    
+
     direction = {
         'w': forward,
         's': backward,
@@ -69,10 +70,10 @@ class KC:
         'd': right,
         'q': quit
     }
-    
+
     def keyControl(self, key):
         func = self.direction.get(chr(key), lambda: "Not valid") #fix lambda
         func(self)
-        
+
 
     #need getter for current speed var

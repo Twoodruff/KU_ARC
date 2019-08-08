@@ -11,13 +11,13 @@ car.run()
 
 
 while 1:
-    
+
     #comm = input("Command: ")
     comm = sys.stdin.readline()
     #time.sleep(0.5)
     key = ord(comm[0])
     control.keyControl(key)
-    
 
-cap.release()
-cv2.destroyAllWindows()
+
+#cap.release()
+#cv2.destroyAllWindows()
