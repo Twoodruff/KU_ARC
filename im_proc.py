@@ -6,7 +6,6 @@ import cv2
 # np is an alias pointing to numpy library
 import numpy as np
 
-
 # capture frames from a camera
 cap = cv2.VideoCapture(1)
 
@@ -41,40 +40,41 @@ def avg_lines(frame, lines):
             #find slope using points and categorize left from right
             fit = poly.polyfit((x1,x2), (y1,y2), 1)
             slope = fit[1]
-            int = fit[0]
+            intercept = fit[0]
             if slope < 0:
                 if x2 < wt/2:
-                    left_s.append((slope,int))
+                    left_s.append((slope,intercept))
             elif slope > 0:
                 if x2 > wt/2:
-                    right_s.append((slope,int))
+                    right_s.append((slope,intercept))
 
     # average lines (slope, int)
     avgl = np.mean(left_s, axis = 0)
-    print("avgl", avgl)                         #debug
-    # slopel = avgl[0]
-    # intl = avgl[1]
+    #print("avgl", avgl)                         #debug
+
     avgr = np.mean(right_s, axis = 0)
-    print("avgr", avgr)                         #debug
-    # sloper = avgr[0]
-    # intr = avgr[1]
+    #print("avgr", avgr)                         #debug
 
     #create lane lines based on categorization
-    # if len(left_s) > 0:
-    #     y1 = ht
-    #     y2 = int(ht//2)
-    #     x1 = max(wt,min(0,(y1-intl)/slopel))
-    #     x2 = max(wt,min(0,(y2-intl)/slopel))
-    #     lane_line.append((x1,y1),(x2,y2))
-    #
-    # if len(right_s) > 0:
-    #     y1 = ht
-    #     y2 = int(ht//2)
-    #     x1 = max(wt,min(0,(y1-intr)/sloper))
-    #     x2 = max(wt,min(0,(y2-intr)/sloper))
-    #     lane_line.append((x1,y1),(x2,y2))
-    #
-    print("lane lines", lane_line)
+    if len(left_s) > 0:
+        slopel = avgl[0]
+        intl = avgl[1]
+        y1 = ht
+        y2 = int(y1/2)
+        x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
+        x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
+        lane_line.append([x1,y1,x2,y2])
+
+    if len(right_s) > 0:
+        sloper = avgr[0]
+        intr = avgr[1]
+        y1 = ht
+        y2 = int(y1/2)
+        x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
+        x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
+        lane_line.append([x1,y1,x2,y2])
+
+    #print("lane lines", lane_line)              #debug
     return lane_line
 
 # loop runs if capturing has been initialized
@@ -131,9 +131,11 @@ while(1):
 
     cv2.imshow('Hough', frame1)
 
-    avg_lines(frame1, lines)
+    lanes = avg_lines(frame1, lines)
 
-	# Wait for Esc key to stop
+    # draw calculated lanes
+
+	# Wait for 'q' key to stop
     k = cv2.waitKey(1) & 0xFF
     if k == 113:
         break
