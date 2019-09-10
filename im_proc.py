@@ -63,7 +63,7 @@ def avg_lines(frame, lines):
         y2 = int(y1/2)
         x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
         x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
-        lane_line.append([x1,y1,x2,y2])
+        lane_line.append([int(x1),y1,int(x2),y2])
 
     if len(right_s) > 0:
         sloper = avgr[0]
@@ -72,7 +72,7 @@ def avg_lines(frame, lines):
         y2 = int(y1/2)
         x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
         x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
-        lane_line.append([x1,y1,x2,y2])
+        lane_line.append([int(x1),y1,int(x2),y2])
 
     #print("lane lines", lane_line)              #debug
     return lane_line
@@ -82,12 +82,10 @@ while(1):
 
 	# reads frames from a camera
     ret, frame = cap.read()
-    #cv2.imshow('Original', frame)
+    cv2.imshow('Original', frame)
 
     # rotate frame
     frame1 = rotate(frame, 180)
-
-    # Display an original image
     #cv2.imshow('Rotated',frame1)
 
 	# converting BGR to HSV
@@ -96,10 +94,8 @@ while(1):
     #color detection
     low_red = np.array([90,30,50]) #blue
     up_red = np.array([140,255,255])
-
     mask = cv2.inRange(hsv, low_red, up_red)
     res = cv2.bitwise_and(frame1, frame1, mask = mask)
-
     #cv2.imshow('Color', res)
 
     #crop the top of the image away
@@ -112,7 +108,7 @@ while(1):
     crop_g = cv2.cvtColor(crop_im, cv2.COLOR_HSV2BGR)
     crop_g = cv2.cvtColor(crop_g, cv2.COLOR_BGR2GRAY) #converts from HSV to grayscale
     edges = cv2.Canny(crop_g ,90,180)
-    cv2.imshow('Edges', edges)
+    #cv2.imshow('Edges', edges)
 
     # line detection using Hough transform
     minLineLength = 100
@@ -125,15 +121,18 @@ while(1):
     else:
         pass
 
-    #print(lines)
-    #print(lines[0])
-    #print(lines[1])
+    #cv2.imshow('Hough', frame1)
 
-    cv2.imshow('Hough', frame1)
-
+    #find lane lines from detected lines
     lanes = avg_lines(frame1, lines)
-
+    #print("lanes", lanes)                  #debug
     # draw calculated lanes
+    if lanes is not None:
+        #for line in lanes:
+        for x1,y1,x2,y2 in lanes:
+            cv2.line(frame1, (x1,y1), (x2,y2), (0,255,0), 10)
+
+    cv2.imshow("lanes", frame1)
 
 	# Wait for 'q' key to stop
     k = cv2.waitKey(1) & 0xFF
