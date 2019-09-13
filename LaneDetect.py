@@ -128,6 +128,7 @@ class LaneDetect():
         return self.lanes
 
 
+<<<<<<< HEAD
     def show():
         k = cv2.waitKey(1)
         if k = ord('q') & 0xFF:
@@ -144,6 +145,16 @@ class LaneDetect():
     def showEdge(self):
         cv2.imshow('Edges', self.edges)
         show()
+=======
+    def showRot(self):
+        cv2.imshow('Rotated', self.rot)
+
+    def showHSV(self):
+        cv2.imshow('Color', self.res)
+
+    def showEdge(self):
+        cv2.imshow('Edges', self.edges)
+>>>>>>> Issue #7: format test code into class
 
     def showHough(self):
         new = np.zeros_like(self.rot)
@@ -156,7 +167,10 @@ class LaneDetect():
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Hough', new)
+<<<<<<< HEAD
         show()
+=======
+>>>>>>> Issue #7: format test code into class
 
     def showLanes(self):
         new = np.zeros_like(self.rot)
@@ -168,7 +182,10 @@ class LaneDetect():
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Lanes', new)
+<<<<<<< HEAD
         show()
+=======
+>>>>>>> Issue #7: format test code into class
 
     def shutdown(self):
         cv2.release()
