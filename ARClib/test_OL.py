@@ -6,9 +6,9 @@ Revision: 0.9.1
 Description: Test code for main with open-loop control.
 """
 
-#from keyboard_OL import KC
+from keyboard_OL import KC
 import time
-#from moco import MotorController, Accel
+from moco import MotorController, Accel
 import sys
 
 import threading
@@ -22,12 +22,12 @@ exit_flag = 0
 CAM_PORT = 0    #default is 0
 timeout = 0.5
 
-#car = MotorController()
-#control = KC(car)
-#car.setDrive(curr_spd)
-#car.run()
+car = MotorController()
+control = KC(car)
+car.setDrive(curr_spd)
+car.run()
 
-cap = cv2.VideoCapture(CAM_PORT,cv2.CAP_DSHOW)                                  #create camera instance
+cap = cv2.VideoCapture(CAM_PORT)#,cv2.CAP_DSHOW)                                  #create camera instance
 input_queue = queue.Queue()
 
 
@@ -49,7 +49,7 @@ class move_op(threading.Thread):                                                
         while not exit_flag:
             try:
                 key = self.queue.get()
-                #control.keyControl(key)
+                control.keyControl(key)
                 print("motion processing: {}".format(key))
             except queue.Empty:
                 # if no more input, exit
@@ -73,7 +73,7 @@ while not exit_flag:
         cam_thread.join()
         move_thread.join()
         input_queue.join()
-        #control.keyControl(ord('q'))
+        control.keyControl(ord('q'))
         cap.release()
         cv2.destroyAllWindows()
         pass                   #redundant?
