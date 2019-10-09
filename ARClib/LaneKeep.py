@@ -14,6 +14,8 @@ import cv2
 import numpy as np
 import math
 
+from . import cam #user defined
+
 
 class LaneKeep():
     def __init__(self, cap, detect = [255,0,0], color = [0,255,0]):
@@ -21,20 +23,6 @@ class LaneKeep():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.cap = cap
-
-
-    def rotate(self, image, angle):
-        # grab the dimensions of the image and then determine the
-        # center
-        (h, w) = image.shape[:2]
-        (cX, cY) = (w / 2, h / 2)
-
-        # grab the rotation matrix (applying the negative of the
-        # angle to rotate clockwise)
-        M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-
-        # perform the actual rotation and return the image
-        return cv2.warpAffine(image, M, (w, h))
 
 
     def avg_lines(self, frame, lines):
@@ -137,7 +125,7 @@ class LaneKeep():
         self.height, self.width, _ = frame.shape
 
         # ROTATE FRAME
-        self.rot = self.rotate(frame,180)
+        self.rot = cam.rotate(frame,180)
 
         # CONVERTING COLOR SPACE
         self.hsv = cv2.cvtColor(self.rot, cv2.COLOR_BGR2HSV)
@@ -186,24 +174,19 @@ class LaneKeep():
         return heading_deg
 
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
-    def show(self):
-        k = cv2.waitKey(1)
-        if k == ord('q') & 0xFF:
-            self.shutdown()
-
-    def showRot(self):
+    def showRot(self, cam):
         cv2.imshow('Rotated', self.rot)
-        self.show()
+        cam.show()
 
-    def showHSV(self):
+    def showHSV(self, cam):
         cv2.imshow('Color', self.res)
-        self.show()
+        cam.show()
 
-    def showEdge(self):
+    def showEdge(self, cam):
         cv2.imshow('Edges', self.edges)
-        self.show()
+        cam.show()
 
-    def showHough(self):
+    def showHough(self, cam):
         new = np.zeros_like(self.rot)
         if self.lines is not None:
             for line in self.lines:
@@ -214,9 +197,9 @@ class LaneKeep():
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Hough', new)
-        self.show()
+        cam.show()
 
-    def showLanes(self):
+    def showLanes(self, cam):
         new = np.zeros_like(self.rot)
         if self.lanes is not None:
             for line in self.lanes:
@@ -227,20 +210,17 @@ class LaneKeep():
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Lanes', new)
-        self.show()
-
-
-    def shutdown(self):
-        self.cap.release()
-        cv2.destroyAllWindows()
+        cam.show()
 
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
-    LaneDetect = LaneKeep(cap)
+    import cam
+    camObj = cam.camera(0)
+    LaneDetect = LaneKeep(camObj)
 
     while(1):
-        _, frame = cap.read()
-        steer = LaneDetect.run(frame)
+        frame = camObj.run()
+        fix = cam.undistortFishEye(frame)
+        steer = LaneDetect.run(fix)
         print('\n',steer)
-        LaneDetect.showLanes()
+        LaneDetect.showLanes(camObj)

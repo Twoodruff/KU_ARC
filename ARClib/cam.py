@@ -18,6 +18,14 @@ class camera():
         _,frame = self.cam.read()
         return frame
 
+    def show(self):
+        k = cv2.waitKey(1)
+        if k == ord('q') & 0xFF:
+            self.shutdown()
+
+    def shutdown(self):
+        self.cam.release()
+        cv2.destroyAllWindows()
 
 def rotate(image, angle):
     # grab the dimensions of the image and then determine the
@@ -90,21 +98,27 @@ def getDistortionParams():
     print("D=np.array(" + str(D.tolist()) + ")")
 
 
-# def undistortFishEye(image):
-#     # CONSTANTS FROM CALIBRATION
-#     K =
-#     D =
-#
-#     # GET IMAGE SIZE
-#     h,w = image.shape[:2]
-#     DIM = [h w]
-#
-#     # PERFORM DISTORTION CORRECTION
-#     map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-#     undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-#
-#     return undistorted_img
+def undistortFishEye(image):
+    # CONSTANTS FROM CALIBRATION
+    K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
+    D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
+
+    # GET IMAGE SIZE
+    h,w = image.shape[:2]
+    DIM = (w,h)
+
+    # PERFORM DISTORTION CORRECTION
+    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+    undistorted_img = cv2.remap(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+
+    return undistorted_img
 
 
 if __name__ == "__main__":
-    getDistortionParams()
+    # getDistortionParams()
+    cam = camera(0)
+    frame = cam.run()
+    undistort = undistortFishEye(frame)
+    cv2.imshow("undistorted",undistort)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
