@@ -1,7 +1,7 @@
 """
 File: moco.py
 Author: Thomas Woodruff
-Date: 8/07/19
+Date: 10/14/19
 Revision: 0.1
 Description: Handles all motion control for the car
 """
@@ -32,6 +32,8 @@ class __Actuate__:
 
         self.throttle = 90
         self.dir = 90
+
+        self.running = True
 
 
     def startup(self, mchannel, schannel):
@@ -112,6 +114,46 @@ class MotorController:
         self.steer = self.car.getDir()
         self.speed = self.car.getThrottle()
 
+        self.running = True
+
+
+    def run(self):
+        '''
+        Function: Checks saturation condition and sets desired values
+        '''
+        while self.running:
+            # STEERING CONDITION
+            if (self.steer > MotorController.maxAngle):
+                self.steer = MotorController.maxAngle
+            elif (self.steer < MotorController.minAngle):
+                self.steer = MotorController.minAngle
+            else:
+                pass
+
+            # THROTTLE CONDITION
+            if (self.speed > MotorController.maxSpeed):
+                self.speed = MotorController.maxSpeed
+            elif (self.speed < MotorController.minSpeed):
+                self.speed = MotorController.minSpeed
+            else:
+                pass
+
+
+    def update(self):
+        '''
+        Function: writes to actuators
+        '''
+        self.car.Steer(self.steer)
+        #print("Steering: ", self.steer)
+
+        self.car.Drive(self.speed)
+        #print("Throttle: ", self.speed)
+
+
+    def shutdown(self):
+        self.running = False
+        self.car.shutdown()
+
 
     def setSteer(self, angleIN):
         '''
@@ -142,39 +184,6 @@ class MotorController:
 
     def getSteer(self):
         return(self.steer)
-
-    def run(self):
-        '''
-        Function: Checks saturation condition and sets desired values
-        '''
-        # STEERING CONDITION
-        if (self.steer > MotorController.maxAngle):
-            self.steer = MotorController.maxAngle
-        elif (self.steer < MotorController.minAngle):
-            self.steer = MotorController.minAngle
-        else:
-            pass
-
-        # THROTTLE CONDITION
-        if (self.speed > MotorController.maxSpeed):
-            self.speed = MotorController.maxSpeed
-        elif (self.speed < MotorController.minSpeed):
-            self.speed = MotorController.minSpeed
-        else:
-            pass
-
-    def update(self):
-        '''
-        Function: writes to actuators
-        '''
-        self.car.Steer(self.steer)
-        #print("Steering: ", self.steer)
-
-        self.car.Drive(self.speed)
-        #print("Throttle: ", self.speed)
-
-    def shutdown(self):
-        self.car.shutdown()
 
 
 class Accel:

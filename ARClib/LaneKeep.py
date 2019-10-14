@@ -1,7 +1,7 @@
 """
 File: LaneDetect.py
 Author: Thomas Woodruff
-Date: 9/11/19
+Date: 10/14/19
 Revision: 0.1
 Description: Reads in camera frame from video stream
              and detects lane lines. Classify lanes by
@@ -29,6 +29,84 @@ class LaneKeep():
         det_color = np.uint8([[detect]])
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
+        self.running = True
+
+
+    def run(self, frame):
+        '''
+        Inputs:
+            frame : input that needs processing
+
+        Function: main loop that perfroms color filtering,
+                  edge, line, and lane detection, and computes
+                  desired heading angle
+
+        Outputs:
+            heading_deg : heading angle in degrees
+        '''
+        if self.running:
+            # READ IN FRAME
+            height, width, _ = frame.shape
+
+            # ROTATE FRAME
+            self.rot = cam.rotate(frame,180)
+
+            # CONVERTING COLOR SPACE
+            hsv = cv2.cvtColor(self.rot, cv2.COLOR_BGR2HSV)
+
+            # COLOR DETECTION
+            hue_center = self.detect_color[0][0][0]
+            #bounds in hsv color space
+            lower = np.array([hue_center-25,30,90])
+            upper = np.array([hue_center+25,255,255])
+            mask = cv2.inRange(hsv, lower, upper)
+            self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
+
+            # CROPPING IMAGE
+            crop = np.zeros(self.res.shape, dtype = 'uint8')
+            n = 2   #determines how much of the frame is cropped in the vertical direction
+            top = int(height/n)
+            cv2.rectangle(crop, (0, top), (width, height), (255, 255, 255), -1)
+            crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
+
+            # EDGE DETECTION
+            self.edges = cv2.Canny(crop_im ,100,200)    #threshold parameters may need tuning for robustness
+
+            # LINE DETECTION
+            minLineLength = 100
+            maxLineGap = 20
+            self.lines = cv2.HoughLinesP(self.edges,1,np.pi/180,50,minLineLength,maxLineGap)
+
+            # LANE DETECTION
+            self.lanes = self.avg_lines(self.rot, self.lines)
+
+            # COMPUTE HEADING ANGLE
+            self.prevxoff = 0
+            if len(self.lanes)>1:
+                #if both lanes are detected, find the middle
+                _, _, x_left, _ = self.lanes[0][0]  #first row, first column
+                _, _, x_right, _ = self.lanes[1][0] #second row, first column
+                x_off = (x_left + x_right)/2 - int(width/2)  #offset from frame center
+            elif len(self.lanes)>0:
+                #if only lane is detected
+                x1, _, x2, _ = self.lanes[0][0] - int(width/2)
+                x_off = x2-x1
+            else:
+                #if no lanes are detected, use previous heading
+                x_off = self.prevxoff
+
+            self.prevxoff = x_off
+            y_off = int(height/2)
+            heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
+            self.heading_deg = int(heading_rad * 180 / math.pi)  #convert to deg
+
+
+    def update(self):
+        return self.heading_deg
+
+
+    def shutdown(self):
+        self.running = False
 
 
     def avg_lines(self, frame, lines):
@@ -102,117 +180,43 @@ class LaneKeep():
         # CREATE LANES BASED ON AVG's
         #left lane
         if len(ll_s) > 0:
-            slopel = avgll[0]
-            intl = avgll[1]
-            y1 = ht
-            y2 = int(y1/2)
-            x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
-            x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
-            left_lane = [int(x1),y1,int(x2),y2]
+            left_lane = self.lane(ht,wt,avgll[0],avgll[1])
             lane_line.append([left_lane])
         elif len(rl_s) > 0:
-            slopel = avgrl[0]
-            intl = avgrl[1]
-            y1 = ht
-            y2 = int(y1/2)
-            x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
-            x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
-            left_lane = [int(x1),y1,int(x2),y2]
+            left_lane = self.lane(ht,wt,avgrl[0],avgrl[1])
             lane_line.append([left_lane])
 
         #right lane
         if len(rr_s) > 0:
-            sloper = avgrr[0]
-            intr = avgrr[1]
-            y1 = ht
-            y2 = int(y1/2)
-            x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
-            x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
-            right_lane = [int(x1),y1,int(x2),y2]
+            right_lane = self.lane(ht,wt,avgrr[0],avgrr[1])
             lane_line.append([right_lane])
         elif len(lr_s) > 0:
-            sloper = avglr[0]
-            intr = avglr[1]
-            y1 = ht
-            y2 = int(y1/2)
-            x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
-            x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
-            right_lane = [int(x1),y1,int(x2),y2]
+            right_lane = self.lane(ht,wt,avglr[0],avglr[1])
             lane_line.append([right_lane])
 
         #print("lane lines", lane_line)     #debug
         return lane_line
 
 
-    def run(self, frame):
+    def lane(self,ht,wt,slope,inter):
         '''
         Inputs:
-            frame : input that needs processing
+            ht,wt : size of image frame
+            slope : avg slope of lines
+            inter : avg intercept of lines
 
-        Function: main loop that perfroms color filtering,
-                  edge, line, and lane detection, and computes
-                  desired heading angle
+        Function: helper function to compute lanes
 
         Outputs:
-            heading_deg : heading angle in degrees
+            lane : set of two (x,y) pairs that define
+                   a lane line
         '''
-        # READ IN FRAME
-        height, width, _ = frame.shape
-
-        # ROTATE FRAME
-        self.rot = cam.rotate(frame,180)
-
-        # CONVERTING COLOR SPACE
-        hsv = cv2.cvtColor(self.rot, cv2.COLOR_BGR2HSV)
-
-        # COLOR DETECTION
-        hue_center = self.detect_color[0][0][0]
-        #bounds in hsv color space
-        lower = np.array([hue_center-25,30,90])
-        upper = np.array([hue_center+25,255,255])
-        mask = cv2.inRange(hsv, lower, upper)
-        self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
-
-        # CROPPING IMAGE
-        crop = np.zeros(self.res.shape, dtype = 'uint8')
-        n = 2   #determines how much of the frame is cropped in the vertical direction
-        top = int(height/n)
-        cv2.rectangle(crop, (0, top), (width, height), (255, 255, 255), -1)
-        crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
-
-        # EDGE DETECTION
-        self.edges = cv2.Canny(crop_im ,100,200)    #threshold parameters may need tuning for robustness
-
-        # LINE DETECTION
-        minLineLength = 100
-        maxLineGap = 20
-        self.lines = cv2.HoughLinesP(self.edges,1,np.pi/180,50,minLineLength,maxLineGap)
-
-        # LANE DETECTION
-        self.lanes = self.avg_lines(self.rot, self.lines)
-
-        # COMPUTE HEADING ANGLE
-        self.prevxoff = 0
-        if len(self.lanes)>1:
-            #if both lanes are detected, find the middle
-            _, _, x_left, _ = self.lanes[0][0]  #first row, first column
-            _, _, x_right, _ = self.lanes[1][0] #second row, first column
-            x_off = (x_left + x_right)/2 - int(width/2)  #offset from frame center
-        elif len(self.lanes)>0:
-            #if only lane is detected
-            x1, _, x2, _ = self.lanes[0][0] - int(width/2)
-            x_off = x2-x1
-        else:
-            #if no lanes are detected, use previous heading 
-            x_off = self.prevxoff
-
-        self.prevxoff = x_off
-        y_off = int(height/2)
-        heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
-        heading_deg = int(heading_rad * 180 / math.pi)  #convert to deg
-
-        return heading_deg
-
+        y1 = ht
+        y2 = int(y1/2)
+        x1 = max(-wt,min(2*wt,(y1-inter)/slope))
+        x2 = max(-wt,min(2*wt,(y2-int)/slope))
+        lane = [int(x1),y1,int(x2),y2]
+        return lane
 
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
     def showRot(self, cam):

@@ -1,7 +1,7 @@
 """
 File: cam.py
 Author: Thomas Woodruff
-Date: 10/9/19
+Date: 10/14/19
 Revision: 0.1
 Description: Utility functions for camera
              object.
@@ -17,11 +17,13 @@ class camera():
     def __init__(self, port):
         # START CAMERA
         self.cam = cv2.VideoCapture(port)
+        self.running = True
 
     def run(self):
         # CAPTURE A FRAME AND UNDISTORT
-        _,frame = self.cam.read()
-        self.frame = undistortFishEye(frame)
+        while self.running:
+            _,frame = self.cam.read()
+            self.frame = undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME
@@ -35,6 +37,7 @@ class camera():
 
     def shutdown(self):
         # CLOSE CAMERA
+        self.running = False
         self.cam.release()
         cv2.destroyAllWindows()
 
