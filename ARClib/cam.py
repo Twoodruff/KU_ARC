@@ -11,37 +11,54 @@ import numpy as np
 import cv2
 
 class camera():
+    '''
+    class to handle camera operations
+    '''
     def __init__(self, port):
+        # START CAMERA
         self.cam = cv2.VideoCapture(port)
 
     def run(self):
+        # CAPTURE A FRAME AND UNDISTORT
         _,frame = self.cam.read()
-        return frame
+        self.frame = undistortFishEye(frame)
+
+    def update(self):
+        # RETURN FRAME
+        return self.frame
 
     def show(self):
+        # DISPLAY AN IMAGE/VIDEO STREAM
         k = cv2.waitKey(1)
         if k == ord('q') & 0xFF:
             self.shutdown()
 
     def shutdown(self):
+        # CLOSE CAMERA
         self.cam.release()
         cv2.destroyAllWindows()
 
+
 def rotate(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
+    '''
+    rotate an image by the given angle and return
+    the rotated image
+    '''
+    # GET IMAGE DIMENSIONS
     (h, w) = image.shape[:2]
     (cX, cY) = (w / 2, h / 2)
 
-    # grab the rotation matrix (applying the negative of the
-    # angle to rotate clockwise)
+    # DETERMINE AFFINE TRANSFORMATION
     M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
 
-    # perform the actual rotation and return the image
+    # APPLY TRANSFORMATION AND RETURN
     return cv2.warpAffine(image, M, (w, h))
 
 
 def getDistortionParams():
+    '''
+    credit: https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
+    '''
     import os
     import glob
 
@@ -99,6 +116,9 @@ def getDistortionParams():
 
 
 def undistortFishEye(image):
+    '''
+    credit: https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
+    '''
     # CONSTANTS FROM CALIBRATION
     K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
     D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
@@ -117,8 +137,7 @@ def undistortFishEye(image):
 if __name__ == "__main__":
     # getDistortionParams()
     cam = camera(0)
-    frame = cam.run()
-    undistort = undistortFishEye(frame)
+    cam.run()
+    undistort = cam.update()
     cv2.imshow("undistorted",undistort)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+    cam.show()
