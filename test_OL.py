@@ -6,9 +6,12 @@ Revision: 0.9.1
 Description: Test code for main with open-loop control.
 """
 
+from ARClib import keyboard_OL, moco, cam
 from keyboard_OL import KC
-import time
 from moco import MotorController, Accel
+from cam import camera
+
+import time
 import sys
 
 import threading
@@ -27,17 +30,17 @@ control = KC(car)
 car.setDrive(curr_spd)
 car.run()
 
-cap = cv2.VideoCapture(CAM_PORT)#,cv2.CAP_DSHOW)                                  #create camera instance
+#cap = cv2.VideoCapture(CAM_PORT)#,cv2.CAP_DSHOW)                                  #create camera instance
+cam = camera(CAM_PORT)
 input_queue = queue.Queue()
 
 
 def camera_op():                                                                #reads and displays video
     #take a snapshot
     while not exit_flag:
-        ret, frame = cap.read()
+        frame = cam.run()
         cv2.imshow('frame',frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):                                   #waitKey() statement needed for imshow
-            break                                                               #shouldn't need later on
+        cam.show()                                                               #shouldn't need later on
     print('Camera closed')
 
 class move_op(threading.Thread):                                                #subclass for Thread that calls the keyboard control function
@@ -67,15 +70,15 @@ while not exit_flag:
         comm = sys.stdin.readline()                                             #get input from the cmd
         key = ord(comm[0])
         input_queue.put(key)                                                    #put the input in the queue
-        #control.keyControl(key)
+
     except KeyboardInterrupt:                                                   #if Ctrl-C is pressed, end everything
         exit_flag = 1
         cam_thread.join()
         move_thread.join()
         input_queue.join()
         control.keyControl(ord('q'))
-        cap.release()
-        cv2.destroyAllWindows()
+        #cap.release()
+        #cv2.destroyAllWindows()
         pass                   #redundant?
 
 sys.exit(1)
