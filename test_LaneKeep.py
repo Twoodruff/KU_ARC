@@ -1,7 +1,7 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 10/10/19
+Date: 10/14/19
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
@@ -18,61 +18,71 @@ import queue
 import cv2
 import numpy as np
 
-#global variables
-curr_spd = 0.0
+# GLOBAL VARIABLES
+drivefreq = 10 #Hz
+curr_spd = 0.0 #[-1,1]
+curr_dir = 0
+dt = 1 / drivefreq
 exit_flag = 0
 CAM_PORT = 0
-timeout = 0.5
+timeout = 0.5  #seconds
 
-# Create part objects
+# PART OBJECTS
 car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep(cam)
-pid = PID()
+pid = PID(0.5,0,0)
 input_queue = queue.Queue()
 
-#subclass for Thread that calls the movement functions
-class move_op(threading.Thread):
-    def __init__(self,queue):
-        threading.Thread.__init__(self)
-        self.queue = queue
-        self.x = 0
-
-    def run(self):
-        while not exit_flag:
-            try:
-                #move control
-                self.x += 1
-            except queue.Empty:
-                # if no more input, exit
-                break
-
-#create camera Thread
+# CAMERA THREAD
 cam_thread = threading.Thread(target = cam.run)
 cam_thread.start()
 
-#create control thread
-control_thread = threading.Thread(target = control.run)
-control_thread.start()
+# #create control thread
+# control_thread = threading.Thread(target = control.run)
+# control_thread.start()
 
-#create motion control Thread
-move_thread = move_op(input_queue)
+# MOTION CONTROL THREAD
+move_thread = threading.Thread(target = car.run)
 move_thread.start()
 
 while not exit_flag:
     try:
-        #put the input in the queue
-        input_queue.put()
+        # START LOOP TIMER
+        start_loop = time.time_ns()
+
+        # GET CAMERA INPUT
+        frame = cam.update()
+
+        # COMPUTE SETPOINT HEADING ANGLE
+        control.run(frame)
+        heading = control.update()
+        pid.setSP(heading)
+
+        # PID LOOP
+        while abs(pid.getErr()) > 0.1:
+            print('Loop #: ', n)
+            print('Speed: ', curr_dir)
+            new_dir = pid.update(curr_dir, dt)
+            #move.rampDir(curr_dir, new_dir)
+            car.setSteer(new_dir)
+            curr_dir = new_dir
+
+        # APPLY NEW DIRECTION
+        car.update()
+
+        # END LOOP AND WAIT
+        loop_time = time.time_ns() - start_loop
+        time.sleep(dt - loop_time/1e9)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
         exit_flag = 1
+        car.shutdown()
+        cam.shutdown()
+        control.shutdown()
         cam_thread.join()
         move_thread.join()
-        input_queue.join()
-        control.keyControl(ord('q'))
-        #cap.release()
-        #cv2.destroyAllWindows()
         pass    #redundant?
 
 sys.exit(1)
