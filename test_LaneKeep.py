@@ -30,13 +30,13 @@ timeout = 0.5  #seconds
 # PART OBJECTS
 car = MotorController()
 cam = camera(CAM_PORT)
-control = LaneKeep(cam)
+control = LaneKeep()
 pid = PID(0.5,0,0)
 input_queue = queue.Queue()
 
-# CAMERA THREAD
-cam_thread = threading.Thread(target = cam.run)
-cam_thread.start()
+# # CAMERA THREAD
+# cam_thread = threading.Thread(target = cam.run())
+# cam_thread.start()
 
 # #create control thread
 # control_thread = threading.Thread(target = control.run)
@@ -57,6 +57,7 @@ while not exit_flag:
         start_loop = time.time_ns()
 
         # GET CAMERA INPUT
+        cam.run()
         frame = cam.update()
 
         # COMPUTE SETPOINT HEADING ANGLE
@@ -88,10 +89,13 @@ while not exit_flag:
 
         prev_head = heading
         loop += 1
+        
+        # SHOW LANES
+        control.showLanes(cam)
 
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
-        time.sleep(dt - loop_time/1e9)
+        time.sleep(dt)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
@@ -99,7 +103,7 @@ while not exit_flag:
         car.shutdown()
         cam.shutdown()
         control.shutdown()
-        cam_thread.join()
+        #cam_thread.join()
         #move_thread.join()
         print(loop)
         pass    #redundant?
