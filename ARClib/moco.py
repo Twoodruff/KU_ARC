@@ -104,6 +104,9 @@ class MotorController:
     maxSpeed = 115  #true max is higher
     minSpeed = 65   #true min is lower
 
+    FWD = 1
+    BACK = -1
+
     def __init__(self):
         '''
         create an __Actuate__ instance and setup initial values
@@ -121,7 +124,7 @@ class MotorController:
         '''
         Function: Checks saturation condition and sets desired values
         '''
-        while self.running:
+        if self.running:
             # STEERING CONDITION
             if (self.steer > MotorController.maxAngle):
                 self.steer = MotorController.maxAngle
@@ -143,6 +146,8 @@ class MotorController:
         '''
         Function: writes to actuators
         '''
+        self.run()
+        
         self.car.Steer(self.steer)
         #print("Steering: ", self.steer)
 
@@ -176,7 +181,7 @@ class MotorController:
         Function: maps speedIN to angle value for __Actuate__
         '''
         slope = (MotorController.maxSpeed-MotorController.minSpeed)/2
-        self.speed = (speedIN-self.BACK)*slope + MotorController.minSpeed
+        self.speed = (speedIN-MotorController.BACK)*slope + MotorController.minSpeed
         return float(self.speed)
 
     def getDrive(self):
