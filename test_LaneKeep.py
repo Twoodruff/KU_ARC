@@ -20,7 +20,7 @@ import numpy as np
 
 # GLOBAL VARIABLES
 drivefreq = 10 #Hz
-curr_spd = 0.0 #[-1,1]
+curr_spd = 0.25 #[-1,1]
 curr_dir = 0
 dt = 1 / drivefreq
 exit_flag = 0
@@ -43,8 +43,13 @@ cam_thread.start()
 # control_thread.start()
 
 # MOTION CONTROL THREAD
-move_thread = threading.Thread(target = car.run)
-move_thread.start()
+#move_thread = threading.Thread(target = car.run)
+#move_thread.start()
+
+heading = 0
+prev_head = heading
+loop = 1
+car.setDrive(curr_spd)
 
 while not exit_flag:
     try:
@@ -57,19 +62,32 @@ while not exit_flag:
         # COMPUTE SETPOINT HEADING ANGLE
         control.run(frame)
         heading = control.update()
-        pid.setSP(heading)
 
-        # PID LOOP
-        while abs(pid.getErr()) > 0.1:
-            print('Loop #: ', n)
-            print('Speed: ', curr_dir)
-            new_dir = pid.update(curr_dir, dt)
-            #move.rampDir(curr_dir, new_dir)
-            car.setSteer(new_dir)
-            curr_dir = new_dir
+        # PREVENT OVERSTEERING
+        if (heading-prev_head) > 10:
+            car.setSteer(prev_head + 10)
+        elif (heading-prev_head) < 10:
+            car.setSteer(prev_head - 10)
+        else:
+            car.setSteer(heading)
 
-        # APPLY NEW DIRECTION
+        # APPLY CONTROL INPUTS
         car.update()
+
+        # # PID LOOP
+        # pid.setSP(heading)
+        # while abs(pid.getErr()) > 0.1:
+        #     print('Loop #: ', n)
+        #     print('Speed: ', curr_dir)
+        #     new_dir = pid.update(curr_dir, dt/10) #need to check the effect of dt
+        #     #move.rampDir(curr_dir, new_dir)
+        #     car.setSteer(new_dir)
+        #     # APPLY NEW DIRECTION
+        #     car.update()
+        #     curr_dir = new_dir
+
+        prev_head = heading
+        loop += 1
 
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
@@ -82,7 +100,8 @@ while not exit_flag:
         cam.shutdown()
         control.shutdown()
         cam_thread.join()
-        move_thread.join()
+        #move_thread.join()
+        print(loop)
         pass    #redundant?
 
 sys.exit(1)
