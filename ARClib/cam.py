@@ -77,7 +77,7 @@ def getDistortionParams():
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
 
-    images = glob.glob('*.jpg')
+    images = glob.glob('/home/pi/Documents/KU_ARC/pics/*.jpg')
 
     for fname in images:
         img = cv2.imread(fname)
@@ -123,8 +123,12 @@ def undistortFishEye(image):
     credit: https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
     '''
     # CONSTANTS FROM CALIBRATION
-    K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
-    D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
+    #computer
+    #K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
+    #D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
+    #rpi
+    K = np.array([[472.892,0.0,319.364],[0.0,474.471,271.360],[0.0,0.0,1.0]])
+    D = np.array([[-0.1570],[0.6792],[-2.1645],[2.1713]])
 
     # GET IMAGE SIZE
     h,w = image.shape[:2]
@@ -138,9 +142,9 @@ def undistortFishEye(image):
 
 
 if __name__ == "__main__":
-    # getDistortionParams()
-    cam = camera(0)
-    cam.run()
-    undistort = cam.update()
-    cv2.imshow("undistorted",undistort)
-    cam.show()
+    getDistortionParams()
+    #cam = camera(0)
+    #cam.run()
+    #undistort = cam.update()
+    #cv2.imshow("undistorted",undistort)
+    #cam.show()
