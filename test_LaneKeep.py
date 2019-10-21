@@ -1,7 +1,7 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 10/14/19
+Date: 10/18/19
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
@@ -15,24 +15,24 @@ import time
 import sys
 import threading
 import queue
-import cv2
-import numpy as np
+#import cv2
+#import numpy as np
 
 # GLOBAL VARIABLES
-drivefreq = 10 #Hz
-curr_spd = 0.25 #[-1,1]
+drivefreq = 1  # Hz
+curr_spd = 0.25  # [-1,1]
 curr_dir = 0
 dt = 1 / drivefreq
 exit_flag = 0
 CAM_PORT = 0
-timeout = 0.5  #seconds
+timeout = 0.5  # seconds
 
 # PART OBJECTS
 car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
-pid = PID(0.5,0,0)
-input_queue = queue.Queue()
+pid = PID(0.5, 0, 0)
+#input_queue = queue.Queue()
 
 # # CAMERA THREAD
 # cam_thread = threading.Thread(target = cam.run())
@@ -75,27 +75,17 @@ while not exit_flag:
         # APPLY CONTROL INPUTS
         car.update()
 
-        # # PID LOOP
-        # pid.setSP(heading)
-        # while abs(pid.getErr()) > 0.1:
-        #     print('Loop #: ', n)
-        #     print('Speed: ', curr_dir)
-        #     new_dir = pid.update(curr_dir, dt/10) #need to check the effect of dt
-        #     #move.rampDir(curr_dir, new_dir)
-        #     car.setSteer(new_dir)
-        #     # APPLY NEW DIRECTION
-        #     car.update()
-        #     curr_dir = new_dir
-
         prev_head = heading
         loop += 1
-        
+
         # SHOW LANES
         control.showLanes(cam)
 
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
-        time.sleep(dt)
+        extra_time = dt-loop_time/1e9
+        print('extra time = ',extra_time)
+        time.sleep(dt-loop_time/1e9)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
@@ -106,6 +96,6 @@ while not exit_flag:
         #cam_thread.join()
         #move_thread.join()
         print(loop)
-        pass    #redundant?
+        pass
 
 sys.exit(1)
