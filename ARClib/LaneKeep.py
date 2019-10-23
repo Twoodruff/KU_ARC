@@ -81,7 +81,7 @@ class LaneKeep():
             self.lanes = self.avg_lines(self.rot, self.lines)
 
             # COMPUTE HEADING ANGLE
-            self.prevxoff = 0
+            prevxoff = 0
             if len(self.lanes)>1:
                 #if both lanes are detected, find the middle
                 _, _, x_left, _ = self.lanes[0][0]  #first row, first column
@@ -93,7 +93,7 @@ class LaneKeep():
                 x_off = x2-x1
             else:
                 #if no lanes are detected, use previous heading
-                x_off = self.prevxoff
+                x_off = prevxoff
 
             self.prevxoff = x_off
             y_off = int(height/2)
@@ -267,11 +267,10 @@ if __name__ == "__main__":
     import cam
     camObj = cam.camera(0)
     LaneDetect = LaneKeep()
-
     while(1):
         camObj.run()
         fix = camObj.update()
         LaneDetect.run(fix)
         steer = LaneDetect.update()
-        print('\n',steer)
+        print("steer = ",steer)
         LaneDetect.showLanes(camObj)
