@@ -1,7 +1,7 @@
 """
 File: LaneDetect.py
 Author: Thomas Woodruff
-Date: 10/14/19
+Date: 10/25/19
 Revision: 0.1
 Description: Reads in camera frame from video stream
              and detects lane lines. Classify lanes by
@@ -29,6 +29,7 @@ class LaneKeep():
         det_color = np.uint8([[detect]])
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
+        self.prevxoff = 0
         self.running = True
 
 
@@ -70,18 +71,17 @@ class LaneKeep():
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
 
             # EDGE DETECTION
-            self.edges = cv2.Canny(crop_im ,100,200)    #threshold parameters may need tuning for robustness
+            self.edges = cv2.Canny(crop_im ,80,160)    #threshold parameters may need tuning for robustness
 
             # LINE DETECTION
-            minLineLength = 100
-            maxLineGap = 20
+            minLineLength = 20
+            maxLineGap = 10
             self.lines = cv2.HoughLinesP(self.edges,1,np.pi/180,50,minLineLength,maxLineGap)
 
             # LANE DETECTION
             self.lanes = self.avg_lines(self.rot, self.lines)
 
             # COMPUTE HEADING ANGLE
-            prevxoff = 0
             if len(self.lanes)>1:
                 #if both lanes are detected, find the middle
                 _, _, x_left, _ = self.lanes[0][0]  #first row, first column
@@ -93,7 +93,7 @@ class LaneKeep():
                 x_off = x2-x1
             else:
                 #if no lanes are detected, use previous heading
-                x_off = prevxoff
+                x_off = self.prevxoff
 
             self.prevxoff = x_off
             y_off = int(height/2)
@@ -265,12 +265,20 @@ class LaneKeep():
 
 if __name__ == "__main__":
     import cam
+    import time
+    from tools import median
+
     camObj = cam.camera(0)
     LaneDetect = LaneKeep()
+    medFilter = median(4)
     while(1):
         camObj.run()
         fix = camObj.update()
         LaneDetect.run(fix)
-        steer = LaneDetect.update()
-        print("steer = ",steer)
-        LaneDetect.showLanes(camObj)
+        steeri = LaneDetect.update()
+        steer = medFilter.run(steeri)
+
+        print("steer = ", steer)
+        LaneDetect.showHough(camObj)
+
+        #time.sleep(0.5)

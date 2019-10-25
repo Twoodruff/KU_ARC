@@ -1,7 +1,7 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 10/18/19
+Date: 10/25/19
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
@@ -9,48 +9,35 @@ Description: Test code for main with lane keeping.
 from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.LaneKeep import LaneKeep
-from ARClib.PID import PID
+from ARClib.tools import median
 
 import time
 import sys
-import threading
-import queue
-#import cv2
-#import numpy as np
 
 # GLOBAL VARIABLES
-drivefreq = 1  # Hz
+drivefreq = 10  # Hz
+dt = 1 / drivefreq  # sec
+
 curr_spd = 0.25  # [-1,1]
 curr_dir = 0
-dt = 1 / drivefreq
+
 exit_flag = 0
 CAM_PORT = 0
-timeout = 0.5  # seconds
+filter_size = 3
 
 # PART OBJECTS
 car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
-pid = PID(0.5, 0, 0)
-#input_queue = queue.Queue()
+medFilter = median(filter_size)
 
-# # CAMERA THREAD
-# cam_thread = threading.Thread(target = cam.run())
-# cam_thread.start()
-
-# #create control thread
-# control_thread = threading.Thread(target = control.run)
-# control_thread.start()
-
-# MOTION CONTROL THREAD
-#move_thread = threading.Thread(target = car.run)
-#move_thread.start()
-
+# LOOP INITIALIZATIONS
 heading = 0
 prev_head = heading
 loop = 1
 car.setDrive(curr_spd)
 
+# DRIVE LOOP
 while not exit_flag:
     try:
         # START LOOP TIMER
@@ -62,7 +49,8 @@ while not exit_flag:
 
         # COMPUTE SETPOINT HEADING ANGLE
         control.run(frame)
-        heading = control.update()
+        headingi = control.update()
+        heading = medFilter.run(headingi)
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 10:
@@ -84,8 +72,7 @@ while not exit_flag:
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
         extra_time = dt-loop_time/1e9
-        print('extra time = ',extra_time)
-        time.sleep(dt-loop_time/1e9)
+        time.sleep(dt/2)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
@@ -93,8 +80,6 @@ while not exit_flag:
         car.shutdown()
         cam.shutdown()
         control.shutdown()
-        #cam_thread.join()
-        #move_thread.join()
         print(loop)
         pass
 
