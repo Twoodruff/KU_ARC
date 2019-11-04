@@ -55,9 +55,9 @@ class distance:
 
                 total_pulse_time = (pulse_end - pulse_start)*.5
 
-                distance = 343*total_pulse_time
+                distance = 343*total_pulse_time #distance is in meters
 
-           self.OUT = distance/8
+   self.OUT = distance/8
 
    def update(self,inputs):
 
