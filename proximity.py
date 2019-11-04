@@ -22,30 +22,20 @@ class distance:
    '''
 
    def __init__(self,inputs):
-
         self.TRIG=23
-
         self.ECHO=24
-
         GPIO.setup(self.TRIG,GPIO.OUT)
-
         GPIO.setup(self.ECHO,GPIO.IN)
-
         GPIO.output(self.TRIG,False)
-
         time.sleep(.02)
        # INITIALIZE VARS
 
        self.running = True
 
    def run(self, inputs):
-
        while self.running:
-
            GPIO.output(self.TRIG,True)
-
            time.sleep(.00001)
-
            GPIO.output(self.TRIG,False)
 
            while GPIO.input(self.ECHO)==0:
@@ -55,18 +45,13 @@ class distance:
                pulse_end = time.time()
 
            total_pulse_time = (pulse_end - pulse_start)*.5
-
            distance = 343*total_pulse_time #distance is in meters
-
            self.OUT = distance
 
    def update(self):
-
        return self.OUT
 
 
    def shutdown(self):
-
        GPIO.cleanup()
-
        self.running = False
