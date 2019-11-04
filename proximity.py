@@ -1,7 +1,7 @@
 '''
 File: UltrasonicSensor.py
 Author: Ryan Strong
-Date: 10/28/2019
+Date: 11/4/2019
 Revision: 0.1
 Description: Ultrasonic sensor thread, used to measure distance by sending 8 40kHz signals out and measuring the
              time taken to receive a signal back. Using this time and speed of sound, distance is found.
@@ -9,8 +9,8 @@ Description: Ultrasonic sensor thread, used to measure distance by sending 8 40k
 '''
 
 # IMPORTS
-Import RPi.GPIO as GPIO
-Import time
+import RPi.GPIO as GPIO
+import time
 GPIO.setmode(GPIO.BCM)
 
 class distance:
@@ -30,36 +30,37 @@ class distance:
         GPIO.setup(self.TRIG,GPIO.OUT)
 
         GPIO.setup(self.ECHO,GPIO.IN)
+
+        GPIO.output(self.TRIG,False)
+
+        time.sleep(.02)
        # INITIALIZE VARS
 
        self.running = True
 
    def run(self, inputs):
 
+       while self.running:
 
-       for i in range(0,7):
+           GPIO.output(self.TRIG,True)
 
-           while self.running:
+           time.sleep(.00001)
 
-                GPIO.output(self.TRIG,True)
+           GPIO.output(self.TRIG,False)
 
-                time.sleep(.00001)
+           while GPIO.input(self.ECHO)==0:
+               pulse_start = time.time()
 
-                GPIO.output(self.TRIG,False)
+           while GPIO.input(self.ECHO)==1:
+               pulse_end = time.time()
 
-                while GPIO.input(self.ECHO)==0:
-                    pulse_start = time.time()
+           total_pulse_time = (pulse_end - pulse_start)*.5
 
-                while GPIO.input(self.ECHO)==1:
-                    pulse_end = time.time()
+           distance = 343*total_pulse_time #distance is in meters
 
-                total_pulse_time = (pulse_end - pulse_start)*.5
+           self.OUT = distance
 
-                distance = 343*total_pulse_time #distance is in meters
-
-   self.OUT = distance/8
-
-   def update(self,inputs):
+   def update(self):
 
        return self.OUT
 
