@@ -55,7 +55,7 @@ while not exit_flag:
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 10:
             car.setSteer(prev_head + 10)
-        elif (heading-prev_head) < 10:
+        elif (heading-prev_head) > -10:
             car.setSteer(prev_head - 10)
         else:
             car.setSteer(heading)
