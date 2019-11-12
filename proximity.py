@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 import time
 GPIO.setmode(GPIO.BCM)
 
-class distance:
+class Distance:
 
    '''
    HC-SR04 proximity sensor sends out ultrasonic waves and records time is takes for the
@@ -21,19 +21,22 @@ class distance:
    find distance from sensor/car at any time
    '''
 
-   def __init__(self,inputs):
-        self.TRIG=23
-        self.ECHO=24
+   def __init__(self,trig,echo):
+        self.TRIG=trig
+        self.ECHO=echo
+        #self.OUT=0
         GPIO.setup(self.TRIG,GPIO.OUT)
         GPIO.setup(self.ECHO,GPIO.IN)
-        GPIO.output(self.TRIG,False)
-        time.sleep(.02)
-       # INITIALIZE VARS
+        GPIO.setup(4,GPIO.OUT)
+        GPIO.setup(17,GPIO.OUT)
+        GPIO.output(17,False)
+        GPIO.output(4,True)
 
-       self.running = True
+        self.running = True
 
-   def run(self, inputs):
-       while self.running:
+   def run(self):
+       self.pulse_end=0
+       if self.running:
            GPIO.output(self.TRIG,True)
            time.sleep(.00001)
            GPIO.output(self.TRIG,False)
@@ -42,16 +45,38 @@ class distance:
                pulse_start = time.time()
 
            while GPIO.input(self.ECHO)==1:
-               pulse_end = time.time()
-
-           total_pulse_time = (pulse_end - pulse_start)*.5
-           distance = 343*total_pulse_time #distance is in meters
-           self.OUT = distance
+               self.pulse_end = time.time()
+            
+           if self.pulse_end==0:
+               total_pulse_time = .0117
+           else:
+               total_pulse_time = (self.pulse_end - pulse_start)*.5
+        
+           self.OUT = 343*total_pulse_time #distance is in meters
+               
 
    def update(self):
        return self.OUT
 
 
    def shutdown(self):
-       GPIO.cleanup()
        self.running = False
+       GPIO.cleanup()
+       
+if __name__ == "__main__":
+    testing_dis = Distance(trig=23,echo=24)
+    loop=0
+    try:
+        while True:
+            testing_dis.run()
+            output=testing_dis.update()
+            print("\nloop: ", loop)
+            print(output)
+            loop+=1
+    except KeyboardInterrupt:
+        testing_dis.shutdown()
+
+
+
+
+
