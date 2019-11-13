@@ -7,7 +7,6 @@ Description: Ultrasonic sensor thread, used to measure distance by sending 8 40k
              time taken to receive a signal back. Using this time and speed of sound, distance is found.
              Module must include __init__, run, update, shutdown
 '''
-
 # IMPORTS
 import RPi.GPIO as GPIO
 import time
@@ -41,8 +40,8 @@ class Distance:
            time.sleep(.00001)
            GPIO.output(self.TRIG,False)
 
-           while GPIO.input(self.ECHO)==0:
-               pulse_start = time.time()
+            while GPIO.input(self.ECHO)==0:
+                pulse_start = time.time()
 
            while GPIO.input(self.ECHO)==1:
                self.pulse_end = time.time()
@@ -55,8 +54,8 @@ class Distance:
            self.OUT = 343*total_pulse_time #distance is in meters
                
 
-   def update(self):
-       return self.OUT
+    def update(self):
+        return self.OUT
 
 
    def shutdown(self):
