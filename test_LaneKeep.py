@@ -18,7 +18,7 @@ import sys
 drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
-curr_spd = 0.25  # [-1,1]
+curr_spd = 0.3  # [-1,1]
 curr_dir = 0
 
 exit_flag = 0
@@ -67,7 +67,7 @@ while not exit_flag:
         loop += 1
 
         # SHOW LANES
-        control.showHeading(cam, head-90)
+        #control.showHeading(cam, head-90)
 
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
