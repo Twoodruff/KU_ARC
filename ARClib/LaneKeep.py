@@ -279,6 +279,9 @@ if __name__ == "__main__":
         steer = medFilter.run(steeri)
 
         print("steer = ", steer)
-        LaneDetect.showHough(camObj)
+        LaneDetect.showLanes(camObj)
+        LaneDetect.showHeading(camObj)
+        filename = 'C:/Users/jazzy/Documents/Python/pics/heading_' + str(i) + '.jpg'
+        cv2.imwrite(filename,LaneDetect.headingcam)
 
         #time.sleep(0.5)
