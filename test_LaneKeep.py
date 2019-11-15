@@ -18,7 +18,7 @@ import sys
 drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
-curr_spd = 0.25  # [-1,1]
+curr_spd = 0.3  # [-1,1]
 curr_dir = 0
 
 exit_flag = 0
@@ -54,25 +54,28 @@ while not exit_flag:
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 10:
-            car.setSteer(prev_head + 10)
-        elif (heading-prev_head) < 10:
-            car.setSteer(prev_head - 10)
+            head = car.setSteer(prev_head + 10)
+        elif (heading-prev_head) < -10:
+            head = car.setSteer(prev_head - 10)
         else:
-            car.setSteer(heading)
+            head = car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
         car.update()
 
-        prev_head = heading
+        prev_head = head - 90
         loop += 1
 
         # SHOW LANES
-        control.showLanes(cam)
+        #control.showHeading(cam, head-90)
 
         # END LOOP AND WAIT
         loop_time = time.time_ns() - start_loop
         extra_time = dt-loop_time/1e9
-        time.sleep(dt/2)
+        if extra_time >= 0:
+            time.sleep(extra_time)
+        else:
+            time.sleep(dt-extra_time)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
