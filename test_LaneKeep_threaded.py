@@ -6,10 +6,11 @@ Revision: 0.1
 Description: Test code for main with lane keeping.
 """
 
-from ARClib.moco import MotorController
+#from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.LaneKeep import LaneKeep
 from ARClib.tools import median
+import threading
 
 import time
 import sys
@@ -26,16 +27,23 @@ CAM_PORT = 0
 filter_size = 3
 
 # PART OBJECTS
-car = MotorController()
+#car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
 medFilter = median(filter_size)
+
+#car_thread = threading.Thread(target = car.run)
+cam_thread = threading.Thread(target = cam.run)
+#control_thread =
+
+cam_thread.start()
+time.sleep(1)
 
 # LOOP INITIALIZATIONS
 heading = 0
 prev_head = heading
 loop = 1
-car.setDrive(curr_spd)
+#car.setDrive(curr_spd)
 
 # DRIVE LOOP
 while not exit_flag:
@@ -44,7 +52,7 @@ while not exit_flag:
         start_loop = time.time_ns()
 
         # GET CAMERA INPUT
-        cam.run()
+        #cam.run()
         frame = cam.update()
 
         # COMPUTE SETPOINT HEADING ANGLE
@@ -53,17 +61,18 @@ while not exit_flag:
         heading = medFilter.run(headingi)
 
         # PREVENT OVERSTEERING
-        if (heading-prev_head) > 10:
-            head = car.setSteer(prev_head + 10)
-        elif (heading-prev_head) < -10:
-            head = car.setSteer(prev_head - 10)
-        else:
-            head = car.setSteer(heading)
+        # if (heading-prev_head) > 10:
+        #     head = car.setSteer(prev_head + 10)
+        # elif (heading-prev_head) < -10:
+        #     head = car.setSteer(prev_head - 10)
+        # else:
+        #     head = car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
-        car.update()
+        #car.update()
+        print('car update')
 
-        prev_head = head - 90
+        prev_head = heading - 90
         loop += 1
 
         # SHOW LANES
@@ -80,9 +89,10 @@ while not exit_flag:
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
         exit_flag = 1
-        car.shutdown()
-        cam.shutdown()
+        #car.shutdown()
         control.shutdown()
+        cam.shutdown()
+        cam_thread.join()
         print(loop)
         pass
 

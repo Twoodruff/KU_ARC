@@ -21,7 +21,7 @@ class camera():
 
     def run(self):
         # CAPTURE A FRAME AND UNDISTORT
-        if self.running:
+        while self.running:
             _,frame = self.cam.read()
             self.frame = frame
 
