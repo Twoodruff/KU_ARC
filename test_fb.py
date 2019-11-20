@@ -3,7 +3,7 @@
 '''
 Filename: test_fb.py
 Author: Thomas Woodruff
-Date: 10/17/19
+Date: 10/23/19
 Description: simple feedback control to
              help tune PID
 '''
@@ -20,7 +20,7 @@ pid = PID(0.5,1,0)
 #create car interfaces
 car = MotorController()
 
-#need to add threaded car control 
+#need to add threaded car control
 
 #pid settings
 setpoint_spd = 0.5

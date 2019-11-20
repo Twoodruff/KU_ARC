@@ -1,7 +1,7 @@
 """
 File: moco.py
 Author: Thomas Woodruff
-Date: 10/14/19
+Date: 10/18/19
 Revision: 0.1
 Description: Handles all motion control for the car
 """
@@ -147,7 +147,7 @@ class MotorController:
         Function: writes to actuators
         '''
         self.run()
-        
+
         self.car.Steer(self.steer)
         #print("Steering: ", self.steer)
 

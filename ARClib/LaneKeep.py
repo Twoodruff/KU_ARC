@@ -1,7 +1,7 @@
 """
 File: LaneDetect.py
 Author: Thomas Woodruff
-Date: 10/25/19
+Date: 11/15/19
 Revision: 0.1
 Description: Reads in camera frame from video stream
              and detects lane lines. Classify lanes by
@@ -57,8 +57,7 @@ class LaneKeep():
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
-            #bounds in hsv color space
-            lower = np.array([hue_center-25,30,90])
+            lower = np.array([hue_center-25,30,90]) #bounds in hsv color space
             upper = np.array([hue_center+25,255,255])
             mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
@@ -76,7 +75,9 @@ class LaneKeep():
             # LINE DETECTION
             minLineLength = 20
             maxLineGap = 10
-            self.lines = cv2.HoughLinesP(self.edges,1,np.pi/180,50,minLineLength,maxLineGap)
+            rho_res = 1
+            theta_res = np.pi/180
+            self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,50,minLineLength,maxLineGap)
 
             # LANE DETECTION
             self.lanes = self.avg_lines(self.rot, self.lines)
@@ -88,7 +89,7 @@ class LaneKeep():
                 _, _, x_right, _ = self.lanes[1][0] #second row, first column
                 x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
             elif len(self.lanes)>0:
-                #if only lane is detected
+                #if only one lane is detected
                 x1, _, x2, _ = self.lanes[0][0]
                 x_off = x2-x1
             else:

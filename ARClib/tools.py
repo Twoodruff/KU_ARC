@@ -1,7 +1,7 @@
 '''
 File: tools.py
 Author: Thomas Woodruff
-Date: 10/23/19
+Date: 10/25/19
 Revision: 0.1
 Description: module to store necessary
              helper functions.

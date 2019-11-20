@@ -1,7 +1,7 @@
 """
 File: cam.py
 Author: Thomas Woodruff
-Date: 10/14/19
+Date: 11/11/19
 Revision: 0.1
 Description: Utility functions for camera
              object.
