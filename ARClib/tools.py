@@ -9,11 +9,14 @@ Description: module to store necessary
 
 # IMPORTS
 import math
+import cv2
+from pathlib import Path
 
 class median:
     '''
     computes median filter over range of size
     '''
+    import math
     def __init__(self, size=3):
         '''
         Inputs:
@@ -52,3 +55,25 @@ class median:
         self.loop += 1
 
         return sortArr[self.medX-1]      # compute median value
+
+
+class memory:
+    '''
+    description of class
+    '''
+    def __init__(self, file):
+        '''
+        Inputs:
+            input1 :
+            input2 :
+        '''
+        #specify file path
+        self.filepath = file
+
+
+    def saveImage(self, input):
+        #save input to File
+        frame, heading, loop = input
+        name = "run_"+str(loop)+"_"+str(heading)+".png"
+        filename = self.filepath / name
+        cv2.imwrite(str(filename), frame)

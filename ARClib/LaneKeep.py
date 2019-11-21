@@ -221,16 +221,19 @@ class LaneKeep():
         # SHOW IMAGE AFTER ROTATION
         cv2.imshow('Rotated', self.rot)
         cam.show()
+        return self.rot 
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
         cv2.imshow('Color', self.res)
         cam.show()
+        return sefl.res
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
         cv2.imshow('Edges', self.edges)
         cam.show()
+        return self.edges
 
     def showHough(self, cam):
         # SHOW IMAGE WITH DETECTED LINES
@@ -245,6 +248,7 @@ class LaneKeep():
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Hough', new)
         cam.show()
+        return new
 
     def showLanes(self, cam):
         # SHOW IMAGE WITH DETECTED LANES
@@ -259,6 +263,7 @@ class LaneKeep():
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Lanes', new)
         cam.show()
+        return new
 
     def showHeading(self, cam, heading):
         # SHOW IMAGE WITH DETECTED LANES & HEADING DIRECTION
@@ -280,6 +285,7 @@ class LaneKeep():
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Heading', new)
         cam.show()
+        return new
 
 
 if __name__ == "__main__":
