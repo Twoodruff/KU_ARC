@@ -221,7 +221,7 @@ class LaneKeep():
         # SHOW IMAGE AFTER ROTATION
         cv2.imshow('Rotated', self.rot)
         cam.show()
-        return self.rot 
+        return self.rot
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
@@ -283,8 +283,8 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Heading', new)
-        cam.show()
+        # cv2.imshow('Heading', new)                                            #commented only for debug  
+        #cam.show()
         return new
 
 

@@ -67,13 +67,20 @@ class memory:
             input1 :
             input2 :
         '''
+        from pathlib import Path
+        from datetime import datetime
+        import os
+        #create directory for images
+        now = datetime.now()
+        dt_string = now.strftime("%b-%d-%y_%H-%M-%S")
+        os.makedirs(dt_string)
         #specify file path
-        self.filepath = file
+        self.filepath = file / dt_string
 
 
     def saveImage(self, input):
         #save input to File
         frame, heading, loop = input
-        name = "run_"+str(loop)+"_"+str(heading)+".png"
+        name = "drive_"+str(loop)+"_"+str(heading)+".png"
         filename = self.filepath / name
         cv2.imwrite(str(filename), frame)

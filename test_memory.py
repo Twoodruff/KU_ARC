@@ -7,12 +7,12 @@ import os
 from datetime import datetime
 from ARClib.tools import memory
 
-now = datetime.now()
-dt_string = now.strftime("%b-%d-%y_%H-%M-%S")
-os.makedirs(dt_string)
+# now = datetime.now()
+# dt_string = now.strftime("%b-%d-%y_%H-%M-%S")
+# os.makedirs(dt_string)
 filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
-#filepath = Path("~/pi/home/Documents/") #RPi 
-filepath = filepath / dt_string
+# filepath = Path("~/pi/home/Documents/") #RPi
+# filepath = filepath / dt_string
 
 mem = memory(filepath)
 cap = cv2.VideoCapture(0)
