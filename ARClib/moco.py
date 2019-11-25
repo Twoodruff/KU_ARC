@@ -282,3 +282,18 @@ class Accel:
         self.mc.run()
         self.mc.update()
         print("Stop ", curr_spd, curr_dir)
+
+
+if __name__ == "__main__":
+    import sys
+
+    car = MotorController()
+    car.setDrive(0.3)
+    car.setSteer(sys.argv[1])
+
+    try:
+        while True:
+            car.update()
+            
+    except KeyboardInterrupt:
+        car.shutdown()
