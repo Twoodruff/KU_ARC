@@ -10,15 +10,15 @@ from ARClib.tools import memory
 # now = datetime.now()
 # dt_string = now.strftime("%b-%d-%y_%H-%M-%S")
 # os.makedirs(dt_string)
-filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
-# filepath = Path("~/pi/home/Documents/") #RPi
+# filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
+filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 # filepath = filepath / dt_string
 
 mem = memory(filepath)
 cap = cv2.VideoCapture(0)
 
 loop = 0
-heading = 90 + random.randint(0, 20)
+heading = 90
 while cap.isOpened():
     _, frame = cap.read()
     cv2.imshow('frame',frame)

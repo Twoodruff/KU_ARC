@@ -71,7 +71,7 @@ while not exit_flag:
         # SHOW LANES
         #control.showHeading(cam, head-90)
 
-        # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING 
+        # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         mem.saveImage((control.showHeading(cam, head-90), head-90, loop))
 
         # END LOOP AND WAIT
@@ -83,7 +83,8 @@ while not exit_flag:
         if extra_time >= 0:
             time.sleep(extra_time)
         else:
-            time.sleep(dt-extra_time)
+            print("loop time: ",loop_time/1e9)
+            #time.sleep(dt-extra_time)
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
