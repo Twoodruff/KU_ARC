@@ -168,7 +168,7 @@ class MotorController:
 
         Function: converts angleIN to readable value for __Actuate__
         '''
-        self.steer = angleIN + 90
+        self.steer = angleIN + 90 + 8
         return float(self.steer)
 
 
@@ -294,6 +294,6 @@ if __name__ == "__main__":
     try:
         while True:
             car.update()
-            
+
     except KeyboardInterrupt:
         car.shutdown()
