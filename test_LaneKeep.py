@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 # GLOBAL VARIABLES
-drivefreq = 10  # Hz
+drivefreq = 9  # Hz
 dt = 1 / drivefreq  # sec
 
 curr_spd = 0.3  # [-1,1]
@@ -54,8 +54,8 @@ while not exit_flag:
 
         # COMPUTE SETPOINT HEADING ANGLE
         control.run(frame)
-        headingi = control.update()
-        heading = medFilter.run(headingi)
+        heading = control.update()
+        #heading = medFilter.run(headingi)
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 10:
@@ -83,7 +83,7 @@ while not exit_flag:
         if extra_time >= 0:
             time.sleep(extra_time)
         else:
-            print("loop time: ",loop_time/1e9)
+            print("loop time: ",loop_time/1e6-dt*1e3)
             #time.sleep(dt-extra_time)
 
     #if Ctrl-C is pressed, end everything
