@@ -58,10 +58,10 @@ while not exit_flag:
         #heading = medFilter.run(headingi)
 
         # PREVENT OVERSTEERING
-        if (heading-prev_head) > 10:
-            head = car.setSteer(prev_head + 10)
-        elif (heading-prev_head) < -10:
-            head = car.setSteer(prev_head - 10)
+        if (heading-prev_head) > 20:
+            head = car.setSteer(prev_head + 20)
+        elif (heading-prev_head) < -20:
+            head = car.setSteer(prev_head - 20)
         else:
             head = car.setSteer(heading)
 
