@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 # GLOBAL VARIABLES
-drivefreq = 9  # Hz
+drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
 curr_spd = 0.3  # [-1,1]
@@ -55,7 +55,7 @@ while not exit_flag:
         # COMPUTE SETPOINT HEADING ANGLE
         control.run(frame)
         heading = control.update()
-        #heading = medFilter.run(headingi)
+        heading = medFilter.run(heading)
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 20:
@@ -72,7 +72,9 @@ while not exit_flag:
         #control.showHeading(cam, head-90)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
+        mem_time1 = time.time_ns()
         mem.saveImage((control.showHeading(cam, head-90), head-90, loop))
+        mem_time2 = time.time_ns()
 
         # END LOOP AND WAIT
         prev_head = head - 90
@@ -83,8 +85,10 @@ while not exit_flag:
         if extra_time >= 0:
             time.sleep(extra_time)
         else:
-            print("loop time: ",loop_time/1e6-dt*1e3)
+            print("loop time: {} ms".format(loop_time/1e6))
             #time.sleep(dt-extra_time)
+            
+        print("memory time: {} ms".format((mem_time2-mem_time1)/1e6))
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:

@@ -64,9 +64,9 @@ class LaneKeep():
 
             # CROPPING IMAGE
             crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 2   #determines how much of the frame is cropped in the vertical direction
-            top = int(self.height/n)
-            cv2.rectangle(crop, (0, top), (self.width, self.height), (255, 255, 255), -1)
+            n = 0.67   #determines how much of the frame is cropped in the vertical direction, from the top
+            self.top = int(self.height*n)
+            cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
 
             # EDGE DETECTION
@@ -210,7 +210,7 @@ class LaneKeep():
                    a lane line
         '''
         y1 = ht
-        y2 = int(y1/2)
+        y2 = self.top
         x1 = max(-wt,min(2*wt,(y1-inter)/slope))
         x2 = max(-wt,min(2*wt,(y2-inter)/slope))
         lane = [int(x1),y1,int(x2),y2]
@@ -274,7 +274,7 @@ class LaneKeep():
             x1 = int(self.width/2)
             y1 = self.height
             x2 = int(x1 + (self.height/2)*math.tan(rad))
-            y2 = int(self.height/2)
+            y2 = self.top
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
                 for x1,y1,x2,y2 in line:
