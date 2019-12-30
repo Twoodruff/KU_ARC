@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 # capture frames from a camera
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 def rotate(image, angle):
     # grab the dimensions of the image and then determine the
@@ -28,8 +28,10 @@ def avg_lines(frame, lines):
     lane_line = []
     ht, wt, _ = frame.shape
 
-    left_s = []
-    right_s = []
+    ll_s = []
+    lr_s = []
+    rr_s = []
+    rl_s = []
 
     if lines is None:
         print('No lines to detect')
@@ -42,37 +44,67 @@ def avg_lines(frame, lines):
             slope = fit[1]
             intercept = fit[0]
             if slope < 0:
-                if x2 < wt/2:
-                    left_s.append((slope,intercept))
+                if x2 < int(wt*(2/3)):
+                    ll_s.append((slope,intercept))                              #neg slope on left side (straight/right)
+                else:
+                    lr_s.append((slope,intercept))                              #neg slope on right side (turn right)
             elif slope > 0:
-                if x2 > wt/2:
-                    right_s.append((slope,intercept))
+                if x2 >  int(wt*(1/3)):
+                    rr_s.append((slope,intercept))                              #pos slope on right side (straight/left)
+                else:
+                    rl_s.append((slope,intercept))                              #pos slope on left side (turn left)
+            else:
+                pass
+
 
     # average lines (slope, int)
-    avgl = np.mean(left_s, axis = 0)
-    #print("avgl", avgl)                         #debug
-
-    avgr = np.mean(right_s, axis = 0)
-    #print("avgr", avgr)                         #debug
+    avglr = np.mean(lr_s, axis = 0)
+    print("\nRight", avglr)
+    avgll = np.mean(ll_s, axis = 0)
+    print("Strt/Right", avgll)                         #debug
+    avgrr = np.mean(rr_s, axis = 0)
+    print("Strt/Left", avgrr)                         #debug
+    avgrl = np.mean(rl_s, axis = 0)
+    print("Left", avgrl)
 
     #create lane lines based on categorization
-    if len(left_s) > 0:
-        slopel = avgl[0]
-        intl = avgl[1]
+    if len(ll_s) > 0:
+        slopel = avgll[0]
+        intl = avgll[1]
         y1 = ht
         y2 = int(y1/2)
         x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
         x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
-        lane_line.append([int(x1),y1,int(x2),y2])
+        left_lane = [int(x1),y1,int(x2),y2]
+        lane_line.append([left_lane])
+    elif len(rl_s) > 0:
+        slopel = avgrl[0]
+        intl = avgrl[1]
+        y1 = ht
+        y2 = int(y1/2)
+        x1 = max(-wt,min(2*wt,(y1-intl)/slopel))
+        x2 = max(-wt,min(2*wt,(y2-intl)/slopel))
+        left_lane = [int(x1),y1,int(x2),y2]
+        lane_line.append([left_lane])
 
-    if len(right_s) > 0:
-        sloper = avgr[0]
-        intr = avgr[1]
+    if len(rr_s) > 0:
+        sloper = avgrr[0]
+        intr = avgrr[1]
         y1 = ht
         y2 = int(y1/2)
         x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
         x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
-        lane_line.append([int(x1),y1,int(x2),y2])
+        right_lane = [int(x1),y1,int(x2),y2]
+        lane_line.append([right_lane])
+    elif len(lr_s) > 0:
+        sloper = avglr[0]
+        intr = avglr[1]
+        y1 = ht
+        y2 = int(y1/2)
+        x1 = max(-wt,min(2*wt,(y1-intr)/sloper))
+        x2 = max(-wt,min(2*wt,(y2-intr)/sloper))
+        right_lane = [int(x1),y1,int(x2),y2]
+        lane_line.append([right_lane])
 
     #print("lane lines", lane_line)              #debug
     return lane_line
@@ -82,7 +114,7 @@ while(1):
 
 	# reads frames from a camera
     ret, frame = cap.read()
-    cv2.imshow('Original', frame)
+    #cv2.imshow('Original', frame)
 
     # rotate frame
     frame1 = rotate(frame, 180)
@@ -92,10 +124,11 @@ while(1):
     hsv = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
 
     #color detection
-    low_red = np.array([90,30,50]) #blue
-    up_red = np.array([140,255,255])
+    low_red = np.array([95,30,90]) #blue
+    up_red = np.array([145,255,255])
     mask = cv2.inRange(hsv, low_red, up_red)
-    res = cv2.bitwise_and(frame1, frame1, mask = mask)
+    res = cv2.bitwise_and(hsv, hsv, mask = mask)
+
     #cv2.imshow('Color', res)
 
     #crop the top of the image away
@@ -106,14 +139,14 @@ while(1):
     # finds edges in the input image image and
 	# marks them in the output map edges
     crop_g = cv2.cvtColor(crop_im, cv2.COLOR_HSV2BGR)
-    crop_g = cv2.cvtColor(crop_g, cv2.COLOR_BGR2GRAY) #converts from HSV to grayscale
+    crop_g = cv2.cvtColor(crop_g, cv2.COLOR_BGR2GRAY) #converts from HSV to grayscale, attempt
     edges = cv2.Canny(crop_g ,90,180)
     #cv2.imshow('Edges', edges)
 
     # line detection using Hough transform
-    minLineLength = 100
-    maxLineGap = 20
-    lines = cv2.HoughLinesP(edges,1,np.pi/180,50,minLineLength,maxLineGap)
+    minLineLength = 50
+    maxLineGap = 25
+    lines = cv2.HoughLinesP(edges,1,np.pi/180,40,minLineLength,maxLineGap)
     if lines is not None:
         for line in lines:
             for x1,y1,x2,y2 in line:
@@ -121,21 +154,22 @@ while(1):
     else:
         pass
 
-    #cv2.imshow('Hough', frame1)
+    cv2.imshow('Hough', frame1)
 
     #find lane lines from detected lines
     lanes = avg_lines(frame1, lines)
     #print("lanes", lanes)                  #debug
     # draw calculated lanes
     if lanes is not None:
-        #for line in lanes:
-        for x1,y1,x2,y2 in lanes:
-            cv2.line(frame1, (x1,y1), (x2,y2), (0,255,0), 10)
+        for line in lanes:
+            for x1,y1,x2,y2 in line:
+                cv2.line(frame1, (x1,y1), (x2,y2), (0,255,0), 10)
 
+    cv2.line(frame1, (int(frame.shape[1]/2),int(frame.shape[0])),(int(frame.shape[1]/2),0),(255,0,0),2)
     cv2.imshow("lanes", frame1)
 
 	# Wait for 'q' key to stop
-    k = cv2.waitKey(1) & 0xFF
+    k = cv2.waitKey(2) & 0xFF
     if k == 113:
         break
     else:
