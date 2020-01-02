@@ -14,6 +14,8 @@ from ARClib.tools import median, memory
 import time
 import sys
 from pathlib import Path
+import threading
+import queue
 
 # GLOBAL VARIABLES
 drivefreq = 10  # Hz
@@ -35,6 +37,18 @@ cam = camera(CAM_PORT)
 control = LaneKeep()
 medFilter = median(filter_size)
 mem = memory(filepath)
+
+# THREADS
+image_queue = queue.Queue()
+
+def memory_op():
+    try:
+        image = image_queue.get()
+        mem.saveImage(image)
+    except queue.Empty:
+        pass
+
+mem_thread = threading.Thread(target = memory_op)
 
 # LOOP INITIALIZATIONS
 heading = 0
@@ -73,7 +87,7 @@ while not exit_flag:
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         mem_time1 = time.time_ns()
-        mem.saveImage((control.showHeading(cam, head-90), head-90, loop))
+        image_queue.put((control.showHeading(cam, head-90), head-90, loop))
         mem_time2 = time.time_ns()
 
         # END LOOP AND WAIT
@@ -87,7 +101,7 @@ while not exit_flag:
         else:
             print("loop time: {} ms".format(loop_time/1e6))
             #time.sleep(dt-extra_time)
-            
+
         print("memory time: {} ms".format((mem_time2-mem_time1)/1e6))
 
     #if Ctrl-C is pressed, end everything
