@@ -130,14 +130,20 @@ class LaneDetect():
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Issue #9: added waitKey() for imshow
+=======
+>>>>>>> de475b981570e3efd2a7afdd540c80d95b176041
     def show():
         k = cv2.waitKey(1)
         if k = ord('q') & 0xFF:
             shutdown()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> de475b981570e3efd2a7afdd540c80d95b176041
     def showRot(self):
         cv2.imshow('Rotated', self.rot)
         show()
@@ -149,6 +155,7 @@ class LaneDetect():
     def showEdge(self):
         cv2.imshow('Edges', self.edges)
         show()
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> Issue #9: added waitKey() for imshow
@@ -167,6 +174,8 @@ class LaneDetect():
 =======
         show()
 >>>>>>> Issue #9: added waitKey() for imshow
+=======
+>>>>>>> de475b981570e3efd2a7afdd540c80d95b176041
 
     def showHough(self):
         new = np.zeros_like(self.rot)
@@ -181,12 +190,16 @@ class LaneDetect():
         cv2.imshow('Hough', new)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         show()
 =======
 >>>>>>> Issue #7: format test code into class
 =======
         show()
 >>>>>>> Issue #9: added waitKey() for imshow
+=======
+        show()
+>>>>>>> de475b981570e3efd2a7afdd540c80d95b176041
 
     def showLanes(self):
         new = np.zeros_like(self.rot)
@@ -200,12 +213,16 @@ class LaneDetect():
         cv2.imshow('Lanes', new)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         show()
 =======
 >>>>>>> Issue #7: format test code into class
 =======
         show()
 >>>>>>> Issue #9: added waitKey() for imshow
+=======
+        show()
+>>>>>>> de475b981570e3efd2a7afdd540c80d95b176041
 
     def shutdown(self):
         cv2.release()

@@ -128,6 +128,7 @@ while(1):
     up_red = np.array([145,255,255])
     mask = cv2.inRange(hsv, low_red, up_red)
     res = cv2.bitwise_and(hsv, hsv, mask = mask)
+
     #cv2.imshow('Color', res)
 
     #crop the top of the image away
