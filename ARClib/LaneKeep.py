@@ -64,7 +64,7 @@ class LaneKeep():
 
             # CROPPING IMAGE
             crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 0.67   #determines how much of the frame is cropped in the vertical direction, from the top
+            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
             self.top = int(self.height*n)
             cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
