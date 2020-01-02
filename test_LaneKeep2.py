@@ -1,7 +1,7 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 11/14/19
+Date: 1/2/20
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
@@ -42,19 +42,25 @@ mem = memory(filepath)
 image_queue = queue.Queue()
 
 def memory_op():
-    try:
-        image = image_queue.get()
-        mem.saveImage(image)
-    except queue.Empty:
-        pass
+    while not exit_flag:
+        try:
+            image = image_queue.get()
+            mem.saveImage(image)
+            image_queue.task_done()
+        except queue.Empty:
+            break
 
 mem_thread = threading.Thread(target = memory_op)
+mem_thread.start()
 
 # LOOP INITIALIZATIONS
 heading = 0
 prev_head = heading
 loop = 1
 car.setDrive(curr_spd)
+car.setSteer(curr_dir)
+cam.run() #grab initial frame to reduce capture time on first loop
+car.update()
 
 # DRIVE LOOP
 while not exit_flag:
@@ -63,12 +69,18 @@ while not exit_flag:
         start_loop = time.time_ns()
 
         # GET CAMERA INPUT
+        start = time.time_ns()
         cam.run()
         frame = cam.update()
+        end = time.time_ns()
+        cam_time = (end - start)/1e6
 
         # COMPUTE SETPOINT HEADING ANGLE
+        start = time.time_ns()
         control.run(frame)
         heading = control.update()
+        end = time.time_ns()
+        control_time = (end - start)/1e6
         heading = medFilter.run(heading)
 
         # PREVENT OVERSTEERING
@@ -80,29 +92,32 @@ while not exit_flag:
             head = car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
+        start = time.time_ns()
         car.update()
+        end = time.time_ns()
+        car_time = (end - start)/1e6
 
         # SHOW LANES
         #control.showHeading(cam, head-90)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
-        mem_time1 = time.time_ns()
+        start = time.time_ns()
         image_queue.put((control.showHeading(cam, head-90), head-90, loop))
-        mem_time2 = time.time_ns()
+        end = time.time_ns()
+        mem_time = (end - start)/1e6
+        #print("queue size: ", image_queue.qsize())
 
         # END LOOP AND WAIT
         prev_head = head - 90
         loop += 1
 
-        loop_time = time.time_ns() - start_loop
+        loop_time = (time.time_ns() - start_loop)/1e6
         extra_time = dt-loop_time/1e9
         if extra_time >= 0:
             time.sleep(extra_time)
-        else:
-            print("loop time: {} ms".format(loop_time/1e6))
-            #time.sleep(dt-extra_time)
 
-        print("memory time: {} ms".format((mem_time2-mem_time1)/1e6))
+        print("cam time: {}\ncontrol time: {}\ncar time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,car_time,mem_time,loop_time))
+
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
@@ -110,6 +125,8 @@ while not exit_flag:
         car.shutdown()
         cam.shutdown()
         control.shutdown()
+        mem_thread.join(timeout=3)
+        image_queue.join()
         print(loop)
         pass
 
