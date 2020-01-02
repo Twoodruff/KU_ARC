@@ -73,7 +73,7 @@ while not exit_flag:
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         mem_time1 = time.time_ns()
-        mem.saveImage((control.showHeading(cam, head-90), head-90, loop))
+        mem.saveImage((control.showHough(cam), head-90, loop))
         mem_time2 = time.time_ns()
 
         # END LOOP AND WAIT
