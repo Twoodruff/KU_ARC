@@ -1,22 +1,25 @@
 #! /usr/bin/env python3
+from __future__ import print_function
+import numpy as np
+import time
+import sys
+from pathlib import Path
 
 import imutils
 from imutils.video import VideoStream
 import cv2
 
-import numpy as np
-import time
-from __future__ import print_function
-import sys
-
-vs = VideoStream(src = 1, usePiCamera = False, resolution = (680,420), framerate = 30).start()
-fourcc = cv2.VideoWriter_fourcc('MJPG')
+print("Creating stream")
+vs = VideoStream(src = 0, usePiCamera = False, resolution = (680,420), framerate = 30).start()
+fourcc = cv2.VideoWriter_fourcc(*"XVID")
 frame = vs.read()
 
 (h, w) = frame.shape[:2]
-writer = cv2.VideoWriter('testrun_'+sys.argv[1], fourcc, 30, (w, h), True)
+filepath = Path("/home/pi/Documents/KU_ARC/testrun.avi")
+writer = cv2.VideoWriter("testrun.avi", fourcc, 30, (w, h), True)
 zeros = np.zeros((h, w), dtype="uint8")
 
+print("Capturing video...")
 while True:
     try:
         frame = vs.read()
@@ -27,3 +30,4 @@ while True:
 
 vs.stop()
 writer.release()
+print("Video caputured")
