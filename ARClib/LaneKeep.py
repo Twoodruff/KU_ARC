@@ -127,10 +127,10 @@ class LaneKeep():
         import numpy.polynomial.polynomial as poly
         # INITIALIZE ARRAYS
         lane_line = []
-        ll_s = []
-        lr_s = []
-        rr_s = []
-        rl_s = []
+        left_close = []
+        left_far = []
+        right_close = []
+        right_far = []
 
         # RETURN IF NO LINES ARE FOUND
         if lines is None:
@@ -144,57 +144,65 @@ class LaneKeep():
                 fit = poly.polyfit((x1,x2), (y1,y2), 1)
                 slope = fit[1]
                 intercept = fit[0]
+                angle = math.arctan((y2-y1)/(x2-x1))
 
-                #classification of lines
-                if slope < 0:
-                    if x2 < int(self.width*(2/3)):
-                        #neg slope on left side (straight/right turn)
-                        ll_s.append((slope,intercept))
+                # classification by slope of line (using the angle)
+                if angle1 is None:
+                    angle1 = angle
+                    ang1 = [(slope,intercept)]
+                elif (math.abs(angle-angle1)>10):
+                    if angle2 is None:
+                        angle2 = angle
+                        ang2 = [(slope,intercept)]
+                    elif (math.abs(angle-angle2)>10):
+                        if angle3 is None:
+                            angle3 = angle
+                            ang3 = [(slope,intercept)]
+                        elif (math.abs(angle-angle3)>10):
+                            if angle4 is None:
+                                angle4 = angle
+                                ang4 = [(slope,intercept)]
+                            else:
+                                ang4.append((slope,intercept))
+                        else:
+                            ang3.append((slope,intercept))
                     else:
-                        #neg slope on right side (right turn)
-                        lr_s.append((slope,intercept))
-                elif slope > 0:
-                    if x2 >  int(self.width*(1/3)):
-                        #pos slope on right side (straight/left turn)
-                        rr_s.append((slope,intercept))
-                    else:
-                        #pos slope on left side (left turn)
-                        rl_s.append((slope,intercept))
+                        ang2.append((slope,intercept))
                 else:
-                    pass
+                    ang1.append((slope,intercept))
 
         # FIND AVG OF EACH TYPE OF LINE
-        avglr = np.mean(lr_s, axis = 0)
+        line1 = np.mean(ang1, axis = 0)
         #print("\nRight", avglr)
 
-        avgll = np.mean(ll_s, axis = 0)
+        line2 = np.mean(ang2, axis = 0)
         #print("Strt/Right", avgll)
-                              #debug
-        avgrr = np.mean(rr_s, axis = 0)
+
+        line3 = np.mean(ang3, axis = 0)
         #print("Strt/Left", avgrr)
 
-        avgrl = np.mean(rl_s, axis = 0)
+        line4 = np.mean(ang4, axis = 0)
         #print("Left", avgrl)
 
         # CREATE LANES BASED ON AVG's
-        #left lane
-        if len(ll_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgll[0],avgll[1])
-            lane_line.append([left_lane])
-        elif len(rl_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgrl[0],avgrl[1])
-            lane_line.append([left_lane])
-
-        #right lane
-        if len(rr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avgrr[0],avgrr[1])
-            lane_line.append([right_lane])
-        elif len(lr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avglr[0],avglr[1])
-            lane_line.append([right_lane])
-
-        #print("lane lines", lane_line)     #debug
-        return lane_line
+        # #left lane
+        # if len(ll_s) > 0:
+        #     left_lane = self.lane(self.height,self.width,avgll[0],avgll[1])
+        #     lane_line.append([left_lane])
+        # elif len(rl_s) > 0:
+        #     left_lane = self.lane(self.height,self.width,avgrl[0],avgrl[1])
+        #     lane_line.append([left_lane])
+        #
+        # #right lane
+        # if len(rr_s) > 0:
+        #     right_lane = self.lane(self.height,self.width,avgrr[0],avgrr[1])
+        #     lane_line.append([right_lane])
+        # elif len(lr_s) > 0:
+        #     right_lane = self.lane(self.height,self.width,avglr[0],avglr[1])
+        #     lane_line.append([right_lane])
+        #
+        # #print("lane lines", lane_line)     #debug
+        # return lane_line
 
 
     def lane(self,ht,wt,slope,inter):
@@ -213,7 +221,7 @@ class LaneKeep():
         y1 = ht
         y2 = self.top
         x1 = max(-wt,min(2*wt,(y1-inter)/slope))
-        x2 = max(-wt,min(2*wt,(y2-inter)/slope))
+        x2 = max(0,min(wt,(y2-inter)/slope))
         lane = [int(x1),y1,int(x2),y2]
         return lane
 
