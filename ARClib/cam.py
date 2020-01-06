@@ -17,12 +17,13 @@ class camera():
     def __init__(self, port):
         # START CAMERA
         self.cam = cv2.VideoCapture(port)
+        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
         self.running = True
 
     def run(self):
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
-            _,frame = self.cam.read()
+            ret,frame = self.cam.read()
             self.frame = frame
 
     def update(self):
