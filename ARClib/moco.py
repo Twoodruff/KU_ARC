@@ -168,8 +168,8 @@ class MotorController:
 
         Function: converts angleIN to readable value for __Actuate__
         '''
-        self.steer = angleIN + 90
-        return float(self.steer)
+        self.steer = angleIN + 90 + 8
+        return float(self.steer-8)
 
 
     def setDrive(self, speedIN):
@@ -282,3 +282,18 @@ class Accel:
         self.mc.run()
         self.mc.update()
         print("Stop ", curr_spd, curr_dir)
+
+
+if __name__ == "__main__":
+    import sys
+
+    car = MotorController()
+    car.setDrive(0.3)
+    car.setSteer(sys.argv[1])
+
+    try:
+        while True:
+            car.update()
+
+    except KeyboardInterrupt:
+        car.shutdown()

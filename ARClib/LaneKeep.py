@@ -64,9 +64,9 @@ class LaneKeep():
 
             # CROPPING IMAGE
             crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 2   #determines how much of the frame is cropped in the vertical direction
-            top = int(self.height/n)
-            cv2.rectangle(crop, (0, top), (self.width, self.height), (255, 255, 255), -1)
+            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
+            self.top = int(self.height*n)
+            cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
 
             # EDGE DETECTION
@@ -210,7 +210,7 @@ class LaneKeep():
                    a lane line
         '''
         y1 = ht
-        y2 = int(y1/2)
+        y2 = self.top
         x1 = max(-wt,min(2*wt,(y1-inter)/slope))
         x2 = max(-wt,min(2*wt,(y2-inter)/slope))
         lane = [int(x1),y1,int(x2),y2]
@@ -221,16 +221,19 @@ class LaneKeep():
         # SHOW IMAGE AFTER ROTATION
         cv2.imshow('Rotated', self.rot)
         cam.show()
+        return self.rot
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
         cv2.imshow('Color', self.res)
         cam.show()
+        return sefl.res
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
         cv2.imshow('Edges', self.edges)
         cam.show()
+        return self.edges
 
     def showHough(self, cam):
         # SHOW IMAGE WITH DETECTED LINES
@@ -243,8 +246,9 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Hough', new)
-        cam.show()
+        # cv2.imshow('Hough', new)
+        # cam.show()
+        return new
 
     def showLanes(self, cam):
         # SHOW IMAGE WITH DETECTED LANES
@@ -259,6 +263,7 @@ class LaneKeep():
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Lanes', new)
         cam.show()
+        return new
 
     def showHeading(self, cam, heading):
         # SHOW IMAGE WITH DETECTED LANES & HEADING DIRECTION
@@ -269,7 +274,7 @@ class LaneKeep():
             x1 = int(self.width/2)
             y1 = self.height
             x2 = int(x1 + (self.height/2)*math.tan(rad))
-            y2 = int(self.height/2)
+            y2 = self.top
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
                 for x1,y1,x2,y2 in line:
@@ -278,8 +283,9 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Heading', new)
-        cam.show()
+        # cv2.imshow('Heading', new)                                            #commented only for debug
+        #cam.show()
+        return new
 
 
 if __name__ == "__main__":
