@@ -57,7 +57,7 @@ class LaneKeep():
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
-            lower = np.array([hue_center-25,30,90]) #bounds in hsv color space
+            lower = np.array([hue_center-25,30,70]) #bounds in hsv color space
             upper = np.array([hue_center+25,255,255])
             mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
@@ -70,14 +70,15 @@ class LaneKeep():
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
 
             # EDGE DETECTION
-            self.edges = cv2.Canny(crop_im ,80,160)    #threshold parameters may need tuning for robustness
+            self.edges = cv2.Canny(crop_im ,95,135)    #threshold parameters may need tuning for robustness
 
             # LINE DETECTION
-            minLineLength = 20
-            maxLineGap = 10
             rho_res = 1
             theta_res = np.pi/180
-            self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,50,minLineLength,maxLineGap)
+            threshold = 50
+            minLineLength = 20
+            maxLineGap = 10
+            self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,threshold,minLineLength,maxLineGap)
 
             # LANE DETECTION
             self.lanes = self.avg_lines(self.rot, self.lines)
@@ -227,7 +228,7 @@ class LaneKeep():
         # SHOW IMAGE AFTER COLOR FITLERING
         cv2.imshow('Color', self.res)
         cam.show()
-        return sefl.res
+        return self.res
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
