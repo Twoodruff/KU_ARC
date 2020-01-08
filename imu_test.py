@@ -302,6 +302,9 @@ if __name__ == '__main__':
     vel_x = []
     vel_y = []
     vel_z = []
+    x_accel = []
+    y_accel = []
+    z_accel = []
     vel_xm = 0
     vel_ym = 0
     vel_zm = 0
@@ -309,6 +312,9 @@ if __name__ == '__main__':
     last_loop = time.time()
     last_write = last_loop
     loop_num = 0
+
+    total_time = 0
+    timet = []
 
     try:
     #Loops endlessly, retrieves values, then prints
@@ -322,26 +328,31 @@ if __name__ == '__main__':
             if(items):
                 sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = items
 
-                accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
+                # accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
 
                 current_loop = time.time()
                 dt = current_loop - last_loop
+                total_time = total_time + dt
 
-                vel_xm = vel_xm + accel_x*9.81*dt
-                vel_ym = vel_ym + accel_y*9.81*dt
+                vel_xm = vel_xm + accel_x*dt
+                vel_ym = vel_ym + accel_y*dt
                 vel_zm = vel_zm + accel_z*9.81*dt
 
                 vel_x.append(vel_xm)
                 vel_y.append(vel_ym)
                 vel_z.append(vel_zm)
+                x_accel.append(accel_x)
+                y_accel.append(accel_y)
 
 <<<<<<< HEAD
 >>>>>>> Add files via upload
 =======
                 last_loop = current_loop
 
+                timet.append(total_time)
                 print("\nloop_num: ",loop_num)
                 print("loop time: ", dt)
+
                 #if(current_loop - last_write)>.05:
                 #print('vx %.4f, vy %.4f, vz %.4f'%(vel_xm, vel_ym, vel_zm))
                 #last_write = current_loop
@@ -350,10 +361,19 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         serial_port.close()
-        loop_time = np.linspace(0, loop_num, loop_num)
-        plt.plot(loop_time, vel_x)
-        plt.plot(loop_time, vel_y)
-        plt.legend()
+        #loop_time = np.linspace(0, loop_num, loop_num)
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+        ax1.plot(timet, vel_x, label='x-velocity')
+        ax1.plot(timet, vel_y, label='y-velocity')
+        ax1.legend()
+        ax1.set_xlabel('time (s)')
+        ax1.set_ylabel('velocity (m/s)')
+        ax1.axis('on')
+        ax2.plot(timet, x_accel, label='x-acceleration')
+        ax2.plot(timet, y_accel, label='y-acceleration')
+        ax2.set_xlabel('time (s)')
+        ax2.set_ylabel('acceleration (m/s^2)')
+        ax2.legend()
         #plt.plot(loop_time, vel_z)
         plt.show()
 
