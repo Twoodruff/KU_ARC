@@ -102,11 +102,11 @@ while not exit_flag:
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        #image_queue.put((control.showHeading(cam, head-90), head-90, loop))
-        image_queue.put((control.showHough(cam), head-90, loop))
+        image_queue.put((control.showHeading(cam, head-90), head-90, loop))
+        # image_queue.put((control.showHough(cam), head-90, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
-        #print("queue size: ", image_queue.qsize())
+        # #print("queue size: ", image_queue.qsize())
 
         # END LOOP AND WAIT
         prev_head = head - 90
