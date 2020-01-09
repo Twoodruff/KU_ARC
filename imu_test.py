@@ -1,4 +1,11 @@
-
+'''
+File: imu_test.py
+Author: Michael Poskin
+Date: 1/9/2020
+Revision: 0.1
+Description: Computes measurements of velocity and heading
+             with IMU (myAHRS+).
+'''
 
 import sys
 import time
@@ -128,7 +135,7 @@ def read_rpyimu(serial_device):
             if(items):
                 sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = items
 
-                # accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
+                accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
 
                 current_loop = time.time()
                 dt = current_loop - last_loop
