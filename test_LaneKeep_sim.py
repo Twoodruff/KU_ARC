@@ -31,7 +31,7 @@ cam = camera('testrun.avi')
 print("Camera fps: ",cam.fps)
 control = LaneKeep()
 medFilter = median(filter_size)
-mem = memory(filepath)
+#mem = memory(filepath)
 
 # THREADS
 image_queue = queue.Queue()
@@ -71,32 +71,33 @@ while not exit_flag:
         # COMPUTE SETPOINT HEADING ANGLE
         start = time.time_ns()
         control.run(frame)
-        heading = control.update()
+        # heading = control.update()
         end = time.time_ns()
         control_time = (end - start)/1e6
-        heading = medFilter.run(heading)
+        # heading = medFilter.run(heading)
 
         # PREVENT OVERSTEERING
-        if (heading-prev_head) > 20:
-            head = prev_head + 20
-        elif (heading-prev_head) < -20:
-            head = prev_head - 20
-        else:
-            head = heading
+        # if (heading-prev_head) > 20:
+        #     head = prev_head + 20
+        # elif (heading-prev_head) < -20:
+        #     head = prev_head - 20
+        # else:
+        #     head = heading
 
         # SHOW LANES
-        #control.showHeading(cam, head-90)
+        # control.showLanes(cam)
+        control.showHough(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        image_queue.put((control.showHeading(cam, head), head, loop))
+        #image_queue.put((control.showHeading(cam, head), head, loop))
         #image_queue.put((control.showHough(cam), head, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
         #print("queue size: ", image_queue.qsize())
 
         # END LOOP AND WAIT
-        prev_head = head
+        # prev_head = head
         loop += 1
 
         loop_time = (time.time_ns() - start_loop)/1e6
@@ -104,7 +105,7 @@ while not exit_flag:
         if extra_time >= 0:
             time.sleep(extra_time)
 
-        print("cam time: {}\ncontrol time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,mem_time,loop_time))
+        #print("cam time: {}\ncontrol time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,mem_time,loop_time))
 
 
     #if Ctrl-C is pressed, end everything
@@ -115,7 +116,7 @@ while not exit_flag:
         mem_thread.join(timeout=3)
         image_queue.join()
         print(loop)
-        sys.exit(0)
+        sys.exit(1)
         break
 
-sys.exit(0)
+sys.exit(1)
