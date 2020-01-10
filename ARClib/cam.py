@@ -16,7 +16,7 @@ class camera():
     '''
     def __init__(self, port):
         # START CAMERA
-        self.cam = cv2.VideoCapture(port)
+        self.cam = cv2.VideoCapture(port,cv2.CAP_FFMPEG)
         self.fps = self.cam.get(cv2.CAP_PROP_FPS)
         self.running = True
 
@@ -24,7 +24,7 @@ class camera():
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
             ret,frame = self.cam.read()
-            self.frame = frame
+            self.frame = frame #undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME
@@ -125,8 +125,8 @@ def undistortFishEye(image):
     '''
     # CONSTANTS FROM CALIBRATION
     #computer
-    #K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
-    #D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
+    # K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
+    # D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
     #rpi
     K = np.array([[472.892,0.0,319.364],[0.0,474.471,271.360],[0.0,0.0,1.0]])
     D = np.array([[-0.1570],[0.6792],[-2.1645],[2.1713]])
