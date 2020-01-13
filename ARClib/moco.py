@@ -168,7 +168,7 @@ class MotorController:
 
         Function: converts angleIN to readable value for __Actuate__
         '''
-        self.steer = angleIN + 90 + 8
+        self.steer = angleIN + 90 + 8  # trim = 8
         return float(self.steer-8)
 
 
