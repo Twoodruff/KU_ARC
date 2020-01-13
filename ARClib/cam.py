@@ -24,7 +24,7 @@ class camera():
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
             ret,frame = self.cam.read()
-            self.frame = frame #undistortFishEye(frame)
+            self.frame = undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME
@@ -58,6 +58,18 @@ def rotate(image, angle):
     # APPLY TRANSFORMATION AND RETURN
     return cv2.warpAffine(image, M, (w, h))
 
+def projective_warp(img):
+    dst_size=(640,480)
+    src=np.float32([(0.25,0.5),(0.75,0.5),(0,0),(1,0)])
+    dst=np.float32([(0,1), (1,1), (0,0), (1,0)])
+
+    img_size = np.float32([img.shape[1],img.shape[0]])
+    src = src * img_size
+    dst = dst * img_size #np.float32(dst_size)
+
+    M = cv2.getPerspectiveTransform(src, dst)
+    warped = cv2.warpPerspective(img, M, dst_size)
+    return warped
 
 def getDistortionParams():
     '''
