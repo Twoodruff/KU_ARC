@@ -57,6 +57,7 @@ class median:
         return sortArr[self.medX-1]      # compute median value
 
 
+
 class memory:
     '''
     description of class
@@ -84,3 +85,65 @@ class memory:
         name = "drive_"+str(loop)+"_"+str(heading)+".png"
         filename = self.filepath / name
         cv2.imwrite(str(filename), frame)
+
+
+
+class line:
+    def __init__(self, slope, intercept):
+        self.m = slope
+        self.b = intercept
+
+
+    def point(self, x=0, y=0):
+        '''
+        returns a point on the line
+        '''
+        if y == 0:
+            return self.m * x + self.b
+        elif x == 0:
+            return (y - self.b)/self.m
+
+
+    def lane(self,ht,wt,x=0,y=0):
+        '''
+        Inputs:
+            ht,wt : size of image frame
+            x,y   : average position of the lane
+
+        Function: helper function to compute lanes
+
+        Outputs:
+            lane : set of two (x,y) pairs that define
+                   a lane line
+        '''
+        if self.m > 0.75:
+            y1 = ht
+            y2 = 0 #self.top
+            x1 = max(-wt,min(2*wt,(y1-self.b)/self.m))
+            x2 = max(0,min(wt,(y2-self.b)/self.m))
+            lane_pts = [int(x1),y1,int(x2),y2]
+        else:
+            x1 = 0
+            x2 = wt
+            y1 = min(2*ht,max(-ht,self.m*x1 + self.b))
+            y2 = min(2*ht,max(-ht,self.m*x2 + self.b))
+            lane_pts = [x1,int(y1),x2,int(y2)]
+
+        return lane_pts
+
+
+    def intersection(self, ht, wt, m2, b2):
+        x = (b2-self.b)/(self.m-m2)
+        if x > wt or x < 0:
+            return -1, -1
+
+        y1 = self.m*x + self.b
+        y2 = m2*x + b2
+        # check they're equal (or close enough)
+        # and within the frame
+        if math.fabs(y1-y2) <= 1e-5*max(math.fabs(y1), math.fabs(y2)):
+            return -1, -1
+        elif y1 > ht or y1 < 0:
+            return -1, -1
+
+        return x, y1

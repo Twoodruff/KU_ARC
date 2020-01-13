@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 import math
 
-from . import cam
+from . import cam, tools
 
 
 class LaneKeep():
@@ -58,7 +58,7 @@ class LaneKeep():
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
             lower = np.array([hue_center-25,30,70]) #bounds in hsv color space
-            upper = np.array([hue_center+25,255,255])
+            upper = np.array([hue_center+25,255,200])
             mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
 
@@ -141,7 +141,7 @@ class LaneKeep():
             print('No lines to detect')
             return lane_line
 
-        # CLASSIFY LINES TO LEFT OR RIGHT LANE
+        # CLASSIFY LINES BASED ON SLOPE
         for line in lines:
             for x1,y1,x2,y2 in line:
                 #find slope using points and categorize left from right
@@ -149,7 +149,7 @@ class LaneKeep():
                 slope = fit[1]
                 intercept = fit[0]
                 angle = math.degrees(math.atan((y2-y1)/(x2-x1)))
-                print("angle: {}\nslope: {}\n".format(angle,slope))
+                # print("angle: {}\nslope: {}\n".format(angle,slope))
 
                 # classification by slope of line (using the angle)
                 if angle1 is None:
@@ -176,67 +176,50 @@ class LaneKeep():
                 else:
                     ang1.append((slope,intercept, x1, y1))
 
-        # FIND AVG OF EACH TYPE OF LINE cd Documents/KU_ARC python Documents/KU_ARC/test_LaneKeep_sim.py
-        #with warnings.catch_warnings():
-        line1 = np.nanmean(ang1, axis = 0)
-        print("line1: ", line1)
+        # FIND AVG OF EACH TYPE OF LINE
+        avg1 = np.nanmean(ang1, axis = 0)
+        print("line1: ", avg1)
 
-        line2 = np.nanmean(ang2, axis = 0)
-        print("line2: ", line2)
+        avg2 = np.nanmean(ang2, axis = 0)
+        print("line2: ", avg2)
 
-        line3 = np.nanmean(ang3, axis = 0)
-        print("line3: ", line3)
+        avg3 = np.nanmean(ang3, axis = 0)
+        print("line3: ", avg3)
 
-        line4 = np.nanmean(ang4, axis = 0)
-        print("line4: {}\n".format(line4))
+        avg4 = np.nanmean(ang4, axis = 0)
+        print("line4: {}\n".format(avg4))
 
-        # CREATE LANES BASED ON AVG's
+        # CREATE LINE OBJECTS BASED ON AVG's
         if len(ang1) > 0:
-            lane1 = self.lane(self.height, self.width, line1[0], line1[1], line1[2], line1[3])
-            lane_line.append([lane1])
+            line1 = tools.line(avg1[0], avg1[1])
+            #lane1 = line1.lane(self.height, self.width, avg1[2], avg1[3])
+            lane_line.append(line1)
 
         if len(ang2) > 0:
-            lane2 = self.lane(self.height, self.width, line2[0], line2[1], line2[2], line2[3])
-            lane_line.append([lane2])
+            line2 = tools.line(avg2[0], avg2[1])
+            #lane2 = line2.lane(self.height, self.width, avg2[2], avg2[3])
+            lane_line.append(line2)
 
         if len(ang3) > 0:
-            lane3 = self.lane(self.height, self.width, line3[0], line3[1], line3[2], line3[3])
-            lane_line.append([lane3])
+            line3 = tools.line(avg3[0], avg3[1])
+            #lane3 = line3.lane(self.height, self.width, avg3[2], avg3[3])
+            lane_line.append(line3)
 
         if len(ang4) > 0:
-            lane4 = self.lane(self.height, self.width, line4[0], line4[1], line4[2], line4[3])
-            lane_line.append([lane4])
+            line4 = tools.line(avg4[0], avg4[1])
+            #lane4 = line4.lane(self.height, self.width, avg4[2], avg4[3])
+            lane_line.append(line4)
+
+        int_pts = []
+        for i in range(len(lane_line)):
+            try:
+                x, y = lane_line[i].intersection(self.height, self.width, lane_line[i+1].m, lane_line[i+1].b)
+                int_pts.append((x,y))
+            except IndexError:
+                break
 
         return lane_line
 
-
-    def lane(self,ht,wt,slope,inter,x,y):
-        '''
-        Inputs:
-            ht,wt : size of image frame
-            slope : avg slope of lines
-            inter : avg intercept of lines
-
-        Function: helper function to compute lanes
-
-        Outputs:
-            lane : set of two (x,y) pairs that define
-                   a lane line
-        '''
-        if slope > 0.75:
-            y1 = ht
-            y2 = 0 #self.top
-            x1 = max(-wt,min(2*wt,(y1-inter)/slope))
-            x2 = max(0,min(wt,(y2-inter)/slope))
-            lane = [int(x1),y1,int(x2),y2]
-        else:
-            x1 = 0
-            x2 = wt
-            y1 = min(2*ht,max(-ht,slope*x1 + inter))
-            y2 = min(2*ht,max(-ht,slope*x2 + inter))
-            lane = [x1,int(y1),x2,int(y2)]
-
-        return lane
 
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
     def showRot(self, cam):
@@ -277,8 +260,8 @@ class LaneKeep():
         new = np.zeros_like(self.rot)
         if self.lanes is not None:
             for line in self.lanes:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
+                lane = line.lane(self.height, self.width)
+                cv2.line(new,(lane[0],lane[1]),(lane[2],lane[3]),self.line_color,10)
         else:
             pass
 
@@ -299,8 +282,8 @@ class LaneKeep():
             y2 = self.top
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
+                lane = line.lane(self.height, self.width)
+                cv2.line(new,(lane[0],lane[1]),(lane[2],lane[3]),self.line_color,10)
         else:
             pass
 

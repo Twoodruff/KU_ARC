@@ -27,7 +27,7 @@ exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('testrun.avi')
+cam = camera('C:/Users/jazzy/Documents/KU_ARC/testrun2_b.avi')
 print("Camera fps: ",cam.fps)
 control = LaneKeep()
 medFilter = median(filter_size)
@@ -46,7 +46,7 @@ def memory_op():
             break
 
 mem_thread = threading.Thread(target = memory_op)
-mem_thread.start()
+# mem_thread.start()
 
 # LOOP INITIALIZATIONS
 heading = 0
@@ -85,7 +85,7 @@ while not exit_flag:
         #     head = heading
 
         # SHOW LANES
-        # control.showLanes(cam)
+        control.showLanes(cam)
         control.showHough(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
@@ -113,10 +113,9 @@ while not exit_flag:
         exit_flag = 1
         cam.shutdown()
         control.shutdown()
-        mem_thread.join(timeout=3)
-        image_queue.join()
+        # mem_thread.join(timeout=3)
+        # image_queue.join()
         print(loop)
-        sys.exit(1)
         break
 
 sys.exit(1)
