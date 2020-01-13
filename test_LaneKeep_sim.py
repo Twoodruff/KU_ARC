@@ -27,7 +27,7 @@ exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('testrun.avi')
+cam = camera('C:/Users/jazzy/Documents/KU_ARC/testrun2.avi')
 print("Camera fps: ",cam.fps)
 control = LaneKeep()
 medFilter = median(filter_size)
@@ -85,7 +85,7 @@ while not exit_flag:
             head = heading
 
         # SHOW LANES
-        #control.showHeading(cam, head-90)
+        control.showHeading(cam, head)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
