@@ -141,9 +141,10 @@ class line:
         y2 = m2*x + b2
         # check they're equal (or close enough)
         # and within the frame
-        if math.fabs(y1-y2) <= 1e-5*max(math.fabs(y1), math.fabs(y2)):
-            return -1, -1
+        if math.fabs(y1-y2) >= (1/ht)*max(math.fabs(y1), math.fabs(y2)):
+            print("y1: {}\ny2: {}".format(y1,y2))
+            return -2, -2
         elif y1 > ht or y1 < 0:
-            return -1, -1
+            return -3, -3
 
-        return x, y1
+        return round(x), round(y1)
