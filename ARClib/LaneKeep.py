@@ -64,7 +64,7 @@ class LaneKeep():
 
             # CROPPING IMAGE
             crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
+            n = 0.4   #determines how much of the frame is cropped in the vertical direction, from the top
             self.top = int(self.height*n)
             cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
@@ -84,23 +84,50 @@ class LaneKeep():
             self.lanes = self.avg_lines(self.rot, self.lines)
 
             # COMPUTE HEADING ANGLE
-            # if len(self.lanes)>1:
-            #     #if both lanes are detected, find the middle
-            #     _, _, x_left, _ = self.lanes[0][0]  #first row, first column
-            #     _, _, x_right, _ = self.lanes[1][0] #second row, first column
-            #     x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
-            # elif len(self.lanes)>0:
-            #     #if only one lane is detected
-            #     x1, _, x2, _ = self.lanes[0][0]
-            #     x_off = x2-x1
-            # else:
-            #     #if no lanes are detected, use previous heading
-            #     x_off = self.prevxoff
-            #
-            # self.prevxoff = x_off
-            # y_off = int(self.height/2)
-            # self.heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
-            # self.heading_deg = int(self.heading_rad * 180 / math.pi)  #convert to deg
+            if len(self.lanes)==2:
+                lane = []
+                for i in range(len(self.lanes)):
+                    lane.append(self.lanes[i].lane(self.height, self.width))
+                #if going straight, find the middle
+                if self.lanes[0].m < 0 or self.lanes[1].m < 0:
+                    if self.lanes[0].m > 0 or self.lanes[1].m > 0:
+                        x_left = lane[0][2]  #first row, first column
+                        x_right = lane[1][2] #second row, first column
+                        x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+
+                #if turning, use the closest lane's slope
+                if self.lanes[0].m < 0 and self.lanes[1].m < 0:
+                    if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
+                        x2 = self.lanes[0].point(y=self.height/2)
+                        x1 = self.lanes[0].point(y=self.height)
+                    else:
+                        x2 = self.lanes[1].point(y=self.height/2)
+                        x1 = self.lanes[1].point(y=self.height)
+
+                    x_off = x2-x1
+                elif self.lanes[0].m > 0 and self.lanes[1].m > 0:
+                    if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
+                        x2 = self.lanes[0].point(y=self.height/2)
+                        x1 = self.lanes[0].point(y=self.height)
+                    else:
+                        x2 = self.lanes[1].point(y=self.height/2)
+                        x1 = self.lanes[1].point(y=self.height)
+
+                    x_off = x2-x1
+
+            elif len(self.lanes)==1:
+                #if only one lane is detected
+                x2 = self.lanes[0].point(y=self.height/2)
+                x1 = self.lanes[0].point(y=self.height)
+                x_off = x2-x1
+            else:
+                #if no lanes are detected, use previous heading
+                x_off = self.prevxoff
+
+            self.prevxoff = x_off
+            y_off = int(self.height/2)
+            self.heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
+            self.heading_deg = int(self.heading_rad * 180 / math.pi)  #convert to deg
 
 
     def update(self):
@@ -115,7 +142,6 @@ class LaneKeep():
         '''
         Inputs:
             frame : image that needs processing
-
             lines : set of lines detected form Hough Transform
 
         Function: uses detected lines to determine the lanes
@@ -178,16 +204,16 @@ class LaneKeep():
 
         # FIND AVG OF EACH TYPE OF LINE
         avg1 = np.nanmean(ang1, axis = 0)
-        print("line1: ", avg1)
+        # print("\nline1: ", avg1)
 
         avg2 = np.nanmean(ang2, axis = 0)
-        print("line2: ", avg2)
+        # print("line2: ", avg2)
 
         avg3 = np.nanmean(ang3, axis = 0)
-        print("line3: ", avg3)
+        # print("line3: ", avg3)
 
         avg4 = np.nanmean(ang4, axis = 0)
-        print("line4: {}\n".format(avg4))
+        # print("line4: {}".format(avg4))
 
         # CREATE LINE OBJECTS BASED ON AVG's
         if len(ang1) > 0:
@@ -210,11 +236,14 @@ class LaneKeep():
             #lane4 = line4.lane(self.height, self.width, avg4[2], avg4[3])
             lane_line.append(line4)
 
-        int_pts = []
+        self.int_pts = []
         for i in range(len(lane_line)):
             try:
                 x, y = lane_line[i].intersection(self.height, self.width, lane_line[i+1].m, lane_line[i+1].b)
-                int_pts.append((x,y))
+                self.int_pts.append((x,y))
+                # if self.int_pts[i][0] > 0:
+                #     print("intersection point: {},{}".format(self.int_pts[i][0], self.int_pts[i][1]))
+
             except IndexError:
                 break
 
@@ -262,6 +291,9 @@ class LaneKeep():
             for line in self.lanes:
                 lane = line.lane(self.height, self.width)
                 cv2.line(new,(lane[0],lane[1]),(lane[2],lane[3]),self.line_color,10)
+
+            for pt in self.int_pts:
+                cv2.circle(new, pt, 5, [255,0,0], -1)
         else:
             pass
 
@@ -279,7 +311,7 @@ class LaneKeep():
             x1 = int(self.width/2)
             y1 = self.height
             x2 = int(x1 + (self.height/2)*math.tan(rad))
-            y2 = self.top
+            y2 = int(self.height/2)
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
                 lane = line.lane(self.height, self.width)
@@ -288,8 +320,8 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        # cv2.imshow('Heading', new)                                            #commented only for debug
-        #cam.show()
+        cv2.imshow('Heading', new)                                            #commented only for debug
+        cam.show()
         return new
 
 

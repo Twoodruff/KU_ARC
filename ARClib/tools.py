@@ -98,6 +98,8 @@ class line:
         '''
         returns a point on the line
         '''
+        x = int(x)
+        y = int(y)
         if y == 0:
             return self.m * x + self.b
         elif x == 0:
@@ -116,17 +118,19 @@ class line:
             lane : set of two (x,y) pairs that define
                    a lane line
         '''
-        if self.m > 0.75:
+        if math.fabs(self.m) > 0.6:
             y1 = ht
-            y2 = 0 #self.top
-            x1 = max(-wt,min(2*wt,(y1-self.b)/self.m))
-            x2 = max(0,min(wt,(y2-self.b)/self.m))
+            y2 = int(ht/2)
+            #bound the x-values inside the image window
+            x1 = max(-wt,min(2*wt,self.point(y=y1)))
+            x2 = max(-wt,min(2*wt,(y2-self.b)/self.m))
             lane_pts = [int(x1),y1,int(x2),y2]
         else:
             x1 = 0
             x2 = wt
+            #bound teh y-values inside the image window
             y1 = min(2*ht,max(-ht,self.m*x1 + self.b))
-            y2 = min(2*ht,max(-ht,self.m*x2 + self.b))
+            y2 = min(2*ht,max(0-ht,self.m*x2 + self.b))
             lane_pts = [x1,int(y1),x2,int(y2)]
 
         return lane_pts
@@ -144,7 +148,7 @@ class line:
         if math.fabs(y1-y2) >= (1/ht)*max(math.fabs(y1), math.fabs(y2)):
             print("y1: {}\ny2: {}".format(y1,y2))
             return -2, -2
-        elif y1 > ht or y1 < 0:
+        elif y1 > ht or y1 < ht/2:
             return -3, -3
 
-        return round(x), round(y1)
+        return int(round(x)), int(round(y1))

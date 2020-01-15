@@ -27,7 +27,7 @@ exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('C:/Users/jazzy/Documents/KU_ARC/testrun2_b.avi')
+cam = camera('C:/Users/jazzy/Documents/KU_ARC/testrun2.avi')
 print("Camera fps: ",cam.fps)
 control = LaneKeep()
 medFilter = median(filter_size)
@@ -71,21 +71,22 @@ while not exit_flag:
         # COMPUTE SETPOINT HEADING ANGLE
         start = time.time_ns()
         control.run(frame)
-        # heading = control.update()
+        heading = control.update()
         end = time.time_ns()
         control_time = (end - start)/1e6
-        # heading = medFilter.run(heading)
+        heading = medFilter.run(heading)
 
         # PREVENT OVERSTEERING
-        # if (heading-prev_head) > 20:
-        #     head = prev_head + 20
-        # elif (heading-prev_head) < -20:
-        #     head = prev_head - 20
-        # else:
-        #     head = heading
+        if (heading-prev_head) > 20:
+            head = prev_head + 20
+        elif (heading-prev_head) < -20:
+            head = prev_head - 20
+        else:
+            head = heading
 
         # SHOW LANES
-        control.showLanes(cam)
+        # control.showLanes(cam)
+        control.showHeading(cam,head)
         control.showHough(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
@@ -97,7 +98,7 @@ while not exit_flag:
         #print("queue size: ", image_queue.qsize())
 
         # END LOOP AND WAIT
-        # prev_head = head
+        prev_head = head
         loop += 1
 
         loop_time = (time.time_ns() - start_loop)/1e6
