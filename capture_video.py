@@ -16,7 +16,7 @@ frame = vs.read()
 
 (h, w) = frame.shape[:2]
 filepath = Path("/home/pi/Documents/KU_ARC/testrun.avi")
-writer = cv2.VideoWriter("testrun_b.avi", fourcc, 30, (w, h), True)
+writer = cv2.VideoWriter("testrun2_b.avi", fourcc, 30, (w, h), True)
 zeros = np.zeros((h, w), dtype="uint8")
 
 print("Capturing video...")
