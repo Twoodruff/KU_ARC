@@ -18,10 +18,10 @@ import threading
 import queue
 
 # GLOBAL VARIABLES
-drivefreq = 10  # Hz
+drivefreq = 7  # Hz
 dt = 1 / drivefreq  # sec
 
-curr_spd = 0.3  # [-1,1]
+curr_spd = 0.29  # [-1,1]
 curr_dir = 0
 
 exit_flag = 0
@@ -94,6 +94,7 @@ while not exit_flag:
         # APPLY CONTROL INPUTS
         start = time.time_ns()
         car.update()
+        head = car.getSteer()
         end = time.time_ns()
         car_time = (end - start)/1e6
 

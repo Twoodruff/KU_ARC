@@ -320,8 +320,8 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Heading', new)                                            #commented only for debug
-        cam.show()
+        # cv2.imshow('Heading', new)                                            #commented only for debug
+        # cam.show()
         return new
 
 
