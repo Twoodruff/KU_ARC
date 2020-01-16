@@ -16,8 +16,8 @@ class camera():
     '''
     def __init__(self, port):
         # START CAMERA
-        self.cam = cv2.VideoCapture(port,cv2.CAP_FFMPEG)
-        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
+        self.cam = cv2.VideoCapture(port) #,cv2.CAP_FFMPEG)
+        #self.fps = self.cam.get(cv2.CAP_PROP_FPS)
         self.running = True
 
     def run(self):
