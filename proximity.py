@@ -14,17 +14,17 @@ from time import sleep
 
 class distance:
 
-    def __init__(self,inputs):
+    def __init__(self):
         self.sensor = DistanceSensor(23,24)
        # INITIALIZE VARS
         self.running = True
 
-    def run(self, inputs):
+    def run(self):
         if self.running:
             while True:
                 print('Distance to the nearest object is', self.sensor.distance,'m')
                 self.OUT = self.sensor.distance
-                sleep(1)
+                time.sleep(1)
 
     def update(self):
         return self.OUT
