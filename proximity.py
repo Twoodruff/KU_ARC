@@ -8,47 +8,27 @@ Description: Ultrasonic sensor thread, used to measure distance by sending 8 40k
              Module must include __init__, run, update, shutdown
 '''
 # IMPORTS
-import RPi.GPIO as GPIO
 import time
-GPIO.setmode(GPIO.BCM)
+from gpiozero import DistanceSensor
+from time import sleep
 
 class distance:
 
-   '''
-   HC-SR04 proximity sensor sends out ultrasonic waves and records time is takes for the
-   waves to return to the sensor. Knowing the speed of sound at sea level is 343 m/s we can
-   find distance from sensor/car at any time
-   '''
     def __init__(self,inputs):
-        self.TRIG=23
-        self.ECHO=24
-        GPIO.setup(self.TRIG,GPIO.OUT)
-        GPIO.setup(self.ECHO,GPIO.IN)
-        GPIO.output(self.TRIG,False)
-        time.sleep(.02)
+        self.sensor = DistanceSensor(23,24)
        # INITIALIZE VARS
         self.running = True
 
     def run(self, inputs):
-        while self.running:
-            GPIO.output(self.TRIG,True)
-            time.sleep(.00001)
-            GPIO.output(self.TRIG,False)
-
-            while GPIO.input(self.ECHO)==0:
-                pulse_start = time.time()
-
-            while GPIO.input(self.ECHO)==1:
-                pulse_end = time.time()
-
-            total_pulse_time = (pulse_end - pulse_start)*.5
-            distance = 343*total_pulse_time #distance is in meters
-            self.OUT = distance
+        if self.running:
+            while True:
+                print('Distance to the nearest object is', self.sensor.distance,'m')
+                self.OUT = self.sensor.distance
+                sleep(1)
 
     def update(self):
         return self.OUT
 
 
     def shutdown(self):
-        GPIO.cleanup()
         self.running = False
