@@ -20,11 +20,16 @@ import numpy as np
 =======
 
 import sys
-import time 
-import serial 
+import time
+import serial
 import traceback
 import math
+<<<<<<< HEAD
 >>>>>>> Add files via upload
+=======
+import matplotlib.pyplot as plt
+import numpy as np
+>>>>>>> added plotting
 
 def send_command(serial_port, cmd_msg):
     cmd_msg = '@' + cmd_msg.strip()
@@ -33,6 +38,7 @@ def send_command(serial_port, cmd_msg):
         crc = crc^ord(c)
     message = cmd_msg + '*%02X'%crc + '\r\n'
     serial_port.write(message.encode())
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     #
@@ -44,6 +50,12 @@ def send_command(serial_port, cmd_msg):
     # wait for response 
     #    
 >>>>>>> Add files via upload
+=======
+
+    #
+    # wait for response
+    #
+>>>>>>> added plotting
     if(cmd_msg != '@trig'):
         while(True):
             line = serial_port.readline().strip().decode()
@@ -55,6 +67,7 @@ def send_command(serial_port, cmd_msg):
 def parse_data_message_rpyimu(data_message):
     # $RPYIMU,39,0.42,-0.31,-26.51,-0.0049,-0.0038,-1.0103,-0.0101,0.0014,-0.4001,51.9000,26.7000,11.7000,41.5*1F
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     data_message = (data_message.split('*')[0]).strip() # discard crc field
     fields = [x.strip() for x in data_message.split(',')]
@@ -65,12 +78,20 @@ def parse_data_message_rpyimu(data_message):
 =======
     
     data_message = (data_message.split('*')[0]).strip() # discard crc field  
+=======
+
+    data_message = (data_message.split('*')[0]).strip() # discard crc field
+>>>>>>> added plotting
     fields = [x.strip() for x in data_message.split(',')]
-    
+
     if(fields[0] != '$RPYIMU'):
         return None
+<<<<<<< HEAD
     
 >>>>>>> Add files via upload
+=======
+
+>>>>>>> added plotting
     sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = (float(x) for x in fields[1:])
     return (int(sequence_number), roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature)
 
@@ -84,10 +105,14 @@ def remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw):
     accel_y = accel_y - grav_y
     accel_z = accel_z - grav_z
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
     
 >>>>>>> Add files via upload
+=======
+
+>>>>>>> added plotting
     return(accel_x, accel_y, accel_z)
 
 #Function that finds max noise of imu (currently not used)
@@ -97,16 +122,21 @@ def set_noise(serial_port):
     accel_noise_y = 0;
     accel_noise_z = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
     
 >>>>>>> Add files via upload
+=======
+
+>>>>>>> added plotting
     print("Calculating noise")
     while(time.time() - last_loop) < 5:
         send_command(serial_port, 'trig')
         items = parse_data_message_rpyimu(serial_port.readline().strip().decode())
         if(items):
             sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = items
+<<<<<<< HEAD
 <<<<<<< HEAD
 
             accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
@@ -116,12 +146,18 @@ def set_noise(serial_port):
             accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
     
 >>>>>>> Add files via upload
+=======
+
+            accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
+
+>>>>>>> added plotting
             if abs(accel_x) > accel_noise_x:
                 accel_noise_x = abs(accel_x)
             if abs(accel_y) > accel_noise_y:
                 accel_noise_y = abs(accel_y)
             if abs(accel_z) > accel_noise_z:
                 accel_noise_z = abs(accel_z)
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     print('anx %.4f, any %.4f, anz %.4f'%(accel_noise_x, accel_noise_y, accel_noise_z))
@@ -131,6 +167,11 @@ def set_noise(serial_port):
     print('anx %.4f, any %.4f, anz %.4f'%(accel_noise_x, accel_noise_y, accel_noise_z))
     
 >>>>>>> Add files via upload
+=======
+
+    print('anx %.4f, any %.4f, anz %.4f'%(accel_noise_x, accel_noise_y, accel_noise_z))
+
+>>>>>>> added plotting
     return(accel_noise_x, accel_noise_y, accel_noise_z)
 
 #Main function, reads from imu and prints values
@@ -140,6 +181,7 @@ def read_rpyimu(serial_device):
     except serial.serialutil.SerialException:
         print('Can not open serial port(%s)'%(serial_device))
         traceback.print_exc()
+<<<<<<< HEAD
 <<<<<<< HEAD
         return
 
@@ -241,62 +283,85 @@ if __name__ == '__main__':
         return 
     
     # Get version 
+=======
+        return
+
+    # Get version
+>>>>>>> added plotting
     rsp = send_command(serial_port, 'version')
-    print(rsp) 
-    
-    # Data transfer mode : ASCII, TRIGGER 
+    print(rsp)
+
+    # Data transfer mode : ASCII, TRIGGER
     rsp = send_command(serial_port, 'mode,AT')
-    print(rsp)  
-    
-    # Select output message type (to my understanding only RPYIMU gives euler angles) 
+    print(rsp)
+
+    # Select output message type (to my understanding only RPYIMU gives euler angles)
     rsp = send_command(serial_port, 'asc_out,RPYIMU')
-    print(rsp)         
-    
-    vel_x = 0
-    vel_y = 0
-    vel_z = 0
-    
+    print(rsp)
+
+    vel_x = []
+    vel_y = []
+    vel_z = []
+    vel_xm = 0
+    vel_ym = 0
+    vel_zm = 0
+
     last_loop = time.time()
     last_write = last_loop
-    
+    loop_num = 0
+
+    try:
     #Loops endlessly, retrieves values, then prints
-    while True:
-        # send trigger command 
-        send_command(serial_port, 'trig')
-        
-        # recieve data_message then parse it for data
-        items = parse_data_message_rpyimu(serial_port.readline().strip().decode())
-        
-        if(items):
-            sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = items
-        
-            accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
-        
-            current_loop = time.time()
-            dt = current_loop - last_loop
-        
-            vel_x = vel_x + accel_x*9.81*dt
-            vel_y = vel_y + accel_y*9.81*dt
-            vel_z = vel_z + accel_z*9.81*dt
-        
-            last_loop = current_loop
-            
-            if(current_loop - last_write)>.05:
-                print('vx %.4f, vy %.4f, vz %.4f'%(vel_x, vel_y, vel_z))
-                last_write = current_loop
+        while True:
+            # send trigger command
+            send_command(serial_port, 'trig')
 
-    serial_port.close()    
+            # recieve data_message then parse it for data
+            items = parse_data_message_rpyimu(serial_port.readline().strip().decode())
 
-if __name__ == '__main__': 
+            if(items):
+                sequence_number, roll, pitch, yaw, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, mag_x, mag_y, mag_z, temperature = items
+
+                accel_x, accel_y, accel_z = remove_gravity(accel_x, accel_y, accel_z, pitch, roll, yaw)
+
+                current_loop = time.time()
+                dt = current_loop - last_loop
+
+                vel_xm = vel_xm + accel_x*9.81*dt
+                vel_ym = vel_ym + accel_y*9.81*dt
+                vel_zm = vel_zm + accel_z*9.81*dt
+
+                vel_x.append(vel_xm)
+                vel_y.append(vel_ym)
+                vel_z.append(vel_zm)
+
+<<<<<<< HEAD
+>>>>>>> Add files via upload
+=======
+                last_loop = current_loop
+
+                print("\nloop_num: ",loop_num)
+                print("loop time: ", dt)
+                #if(current_loop - last_write)>.05:
+                #print('vx %.4f, vy %.4f, vz %.4f'%(vel_xm, vel_ym, vel_zm))
+                #last_write = current_loop
+
+                loop_num += 1
+
+    except KeyboardInterrupt:
+        serial_port.close()
+        loop_time = np.linspace(0, loop_num, loop_num)
+        plt.plot(loop_time, vel_x)
+        plt.plot(loop_time, vel_y)
+        plt.legend()
+        #plt.plot(loop_time, vel_z)
+        plt.show()
+
+if __name__ == '__main__':
     if(len(sys.argv) < 2):
         serial_device = '/dev/ttyACM0'
-    else : 
+    else :
         serial_device = sys.argv[1]
-                        
+
     read_rpyimu(serial_device)
-
-    
-
-
-
->>>>>>> Add files via upload
+>>>>>>> added plotting
