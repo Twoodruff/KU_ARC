@@ -31,7 +31,7 @@ cam = camera('C:/Users/jazzy/Documents/KU_ARC/testrun2.avi')
 print("Camera fps: ",cam.fps)
 control = LaneKeep()
 medFilter = median(filter_size)
-#mem = memory(filepath)
+mem = memory(filepath)
 
 # THREADS
 image_queue = queue.Queue()
@@ -46,7 +46,7 @@ def memory_op():
             break
 
 mem_thread = threading.Thread(target = memory_op)
-# mem_thread.start()
+mem_thread.start()
 
 # LOOP INITIALIZATIONS
 heading = 0
@@ -85,13 +85,11 @@ while not exit_flag:
             head = heading
 
         # SHOW LANES
-        # control.showLanes(cam)
-        control.showHeading(cam,head)
-        control.showHough(cam)
+        #control.showHeading(cam, head)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        #image_queue.put((control.showHeading(cam, head), head, loop))
+        image_queue.put((control.showHeading(cam, head), head, loop))
         #image_queue.put((control.showHough(cam), head, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
@@ -106,7 +104,7 @@ while not exit_flag:
         if extra_time >= 0:
             time.sleep(extra_time)
 
-        #print("cam time: {}\ncontrol time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,mem_time,loop_time))
+        print("cam time: {}\ncontrol time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,mem_time,loop_time))
 
 
     #if Ctrl-C is pressed, end everything
@@ -114,9 +112,10 @@ while not exit_flag:
         exit_flag = 1
         cam.shutdown()
         control.shutdown()
-        # mem_thread.join(timeout=3)
-        # image_queue.join()
+        mem_thread.join(timeout=3)
+        image_queue.join()
         print(loop)
+        sys.exit(0)
         break
 
-sys.exit(1)
+sys.exit(0)

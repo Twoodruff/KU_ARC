@@ -1,7 +1,7 @@
 '''
 File: tools.py
 Author: Thomas Woodruff
-Date: 10/25/19
+Date: 2/4/19
 Revision: 0.1
 Description: module to store necessary
              helper functions.
@@ -89,9 +89,11 @@ class memory:
 
 
 class line:
-    def __init__(self, slope, intercept):
+    def __init__(self, slope, intercept, x=0, y=0):
         self.m = slope
         self.b = intercept
+        self.x = round(x)
+        self.y = round(y)
 
 
     def point(self, x=0, y=0):
@@ -106,11 +108,10 @@ class line:
             return (y - self.b)/self.m
 
 
-    def lane(self,ht,wt,x=0,y=0):
+    def lane(self,ht,wt):
         '''
         Inputs:
             ht,wt : size of image frame
-            x,y   : average position of the lane
 
         Function: helper function to compute lanes
 
@@ -137,9 +138,23 @@ class line:
 
 
     def intersection(self, ht, wt, m2, b2):
+        '''
+        Inputs:
+            ht, wt : size of the frame
+            m2, b2 : slope/int of intersecting line
+
+        Function: computes intersection of self and given line
+
+        Outputs:
+            x, y : coordinates of intersection
+            error codes
+        '''
+        if self.m == m2:
+            return -1, -1
+
         x = (b2-self.b)/(self.m-m2)
         if x > wt or x < 0:
-            return -1, -1
+            return -2, -2
 
         y1 = self.m*x + self.b
         y2 = m2*x + b2
@@ -147,8 +162,8 @@ class line:
         # and within the frame
         if math.fabs(y1-y2) >= (1/ht)*max(math.fabs(y1), math.fabs(y2)):
             print("y1: {}\ny2: {}".format(y1,y2))
-            return -2, -2
-        elif y1 > ht or y1 < ht/2:
             return -3, -3
+        elif y1 > ht or y1 < ht/2:
+            return -4, -4
 
         return int(round(x)), int(round(y1))

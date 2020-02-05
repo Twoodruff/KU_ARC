@@ -1,7 +1,7 @@
 """
 File: LaneDetect.py
 Author: Thomas Woodruff
-Date: 1/7/2020
+Date: 2/4/2020
 Revision: 0.1
 Description: Reads in camera frame from video stream
              and detects lane lines. Classify lanes by
@@ -15,6 +15,7 @@ import numpy as np
 import math
 
 from . import cam, tools
+#import cam, tools
 
 
 class LaneKeep():
@@ -83,42 +84,71 @@ class LaneKeep():
             # LANE DETECTION
             self.lanes = self.avg_lines(self.rot, self.lines)
 
+            # # COMPUTE HEADING ANGLE
+            # if len(self.lanes)==2:
+            #     lane = []
+            #     closestY = []
+            #     for i in range(len(self.lanes)):
+            #         closestY.append(self.lanes[i].y)
+            #
+            #     closeY1 = max(closestY)
+            #     closestY.remove(closeY1)
+            #     closeY2 = max(closestY)
+            #     lane.append(self.lanes[closeY1].lane(self.height, self.width))
+            #     lane.append(self.lanes[closeY2].lane(self.height, self.width))
+            #
+            #     #if going straight, find the middle
+            #     if self.lanes[0].m < 0 or self.lanes[1].m < 0:
+            #         if self.lanes[0].m > 0 or self.lanes[1].m > 0:
+            #             x_left = lane[0][2]  #first row, first column
+            #             x_right = lane[1][2] #second row, first column
+            #             x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+            #
+            #     #if turning, use the closest lane's slope
+            #     if self.lanes[0].m < 0 and self.lanes[1].m < 0:
+            #         if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
+            #             x2 = self.lanes[0].point(y=self.height/2)
+            #             x1 = self.lanes[0].point(y=self.height)
+            #         else:
+            #             x2 = self.lanes[1].point(y=self.height/2)
+            #             x1 = self.lanes[1].point(y=self.height)
+            #
+            #         x_off = x2-x1
+            #     elif self.lanes[0].m > 0 and self.lanes[1].m > 0:
+            #         if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
+            #             x2 = self.lanes[0].point(y=self.height/2)
+            #             x1 = self.lanes[0].point(y=self.height)
+            #         else:
+            #             x2 = self.lanes[1].point(y=self.height/2)
+            #             x1 = self.lanes[1].point(y=self.height)
+            #
+            #         x_off = x2-x1
+            #
+            # elif len(self.lanes)==1:
+            #     #if only one lane is detected
+            #     x2 = self.lanes[0].point(y=self.height/2)
+            #     x1 = self.lanes[0].point(y=self.height)
+            #     x_off = x2-x1
+            # else:
+            #     #if no lanes are detected, use previous heading
+            #     x_off = self.prevxoff
+            #
+            # self.prevxoff = x_off
+            # y_off = int(self.height/2)
+            # self.heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
+            # self.heading_deg = int(self.heading_rad * 180 / math.pi)  #convert to deg
+
             # COMPUTE HEADING ANGLE
-            if len(self.lanes)==2:
-                lane = []
-                for i in range(len(self.lanes)):
-                    lane.append(self.lanes[i].lane(self.height, self.width))
-                #if going straight, find the middle
-                if self.lanes[0].m < 0 or self.lanes[1].m < 0:
-                    if self.lanes[0].m > 0 or self.lanes[1].m > 0:
-                        x_left = lane[0][2]  #first row, first column
-                        x_right = lane[1][2] #second row, first column
-                        x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+            if len(self.lanes)>1:
+                lane = sorted(self.lanes, key=lambda line: line.y, reverse=True)
 
-                #if turning, use the closest lane's slope
-                if self.lanes[0].m < 0 and self.lanes[1].m < 0:
-                    if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
-                        x2 = self.lanes[0].point(y=self.height/2)
-                        x1 = self.lanes[0].point(y=self.height)
-                    else:
-                        x2 = self.lanes[1].point(y=self.height/2)
-                        x1 = self.lanes[1].point(y=self.height)
-
-                    x_off = x2-x1
-                elif self.lanes[0].m > 0 and self.lanes[1].m > 0:
-                    if math.fabs(self.lanes[0].m) > math.fabs(self.lanes[1].m):
-                        x2 = self.lanes[0].point(y=self.height/2)
-                        x1 = self.lanes[0].point(y=self.height)
-                    else:
-                        x2 = self.lanes[1].point(y=self.height/2)
-                        x1 = self.lanes[1].point(y=self.height)
-
-                    x_off = x2-x1
-
-            elif len(self.lanes)==1:
+                #if both lanes are detected, find the middle
+                _, _, x_left, _ = lane[0].lane(self.height, self.width)  #first row, first column
+                _, _, x_right, _ = lane[1].lane(self.height, self.width) #second row, first column
+                x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+            elif len(self.lanes)>0:
                 #if only one lane is detected
-                x2 = self.lanes[0].point(y=self.height/2)
-                x1 = self.lanes[0].point(y=self.height)
+                x1, _, x2, _ = self.lanes[0].lane(self.height, self.width)
                 x_off = x2-x1
             else:
                 #if no lanes are detected, use previous heading
@@ -217,35 +247,35 @@ class LaneKeep():
 
         # CREATE LINE OBJECTS BASED ON AVG's
         if len(ang1) > 0:
-            line1 = tools.line(avg1[0], avg1[1])
+            line1 = tools.line(avg1[0], avg1[1], avg1[2], avg1[3])
             #lane1 = line1.lane(self.height, self.width, avg1[2], avg1[3])
             lane_line.append(line1)
 
         if len(ang2) > 0:
-            line2 = tools.line(avg2[0], avg2[1])
+            line2 = tools.line(avg2[0], avg2[1], avg2[2], avg2[3])
             #lane2 = line2.lane(self.height, self.width, avg2[2], avg2[3])
             lane_line.append(line2)
 
         if len(ang3) > 0:
-            line3 = tools.line(avg3[0], avg3[1])
+            line3 = tools.line(avg3[0], avg3[1], avg3[2], avg3[3])
             #lane3 = line3.lane(self.height, self.width, avg3[2], avg3[3])
             lane_line.append(line3)
 
         if len(ang4) > 0:
-            line4 = tools.line(avg4[0], avg4[1])
+            line4 = tools.line(avg4[0], avg4[1], avg4[2], avg4[3])
             #lane4 = line4.lane(self.height, self.width, avg4[2], avg4[3])
             lane_line.append(line4)
 
-        self.int_pts = []
-        for i in range(len(lane_line)):
-            try:
-                x, y = lane_line[i].intersection(self.height, self.width, lane_line[i+1].m, lane_line[i+1].b)
-                self.int_pts.append((x,y))
-                # if self.int_pts[i][0] > 0:
-                #     print("intersection point: {},{}".format(self.int_pts[i][0], self.int_pts[i][1]))
-
-            except IndexError:
-                break
+        # self.int_pts = []
+        # for i in range(len(lane_line)):
+        #     try:
+        #         x, y = lane_line[i].intersection(self.height, self.width, lane_line[i+1].m, lane_line[i+1].b)
+        #         self.int_pts.append((x,y))
+        #         # if self.int_pts[i][0] > 0:
+        #         #     print("intersection point: {},{}".format(self.int_pts[i][0], self.int_pts[i][1]))
+        #
+        #     except IndexError:
+        #         break
 
         return lane_line
 
@@ -320,8 +350,8 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        # cv2.imshow('Heading', new)                                            #commented only for debug
-        # cam.show()
+        cv2.imshow('Heading', new)                                            #commented only for debug
+        cam.show()
         return new
 
 

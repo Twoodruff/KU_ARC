@@ -17,7 +17,7 @@ class camera():
     def __init__(self, port):
         # START CAMERA
         self.cam = cv2.VideoCapture(port) #,cv2.CAP_FFMPEG)
-        #self.fps = self.cam.get(cv2.CAP_PROP_FPS)
+        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
         self.running = True
 
     def run(self):
@@ -25,6 +25,7 @@ class camera():
         if self.running:
             ret,frame = self.cam.read()
             self.frame = undistortFishEye(frame)
+            #self.frame = projective_warp(frame)
 
     def update(self):
         # RETURN FRAME
@@ -60,7 +61,7 @@ def rotate(image, angle):
 
 def projective_warp(img):
     dst_size=(640,480)
-    src=np.float32([(0.25,0.5),(0.75,0.5),(0,0),(1,0)])
+    src=np.float32([(0.25,0.5),(0.80,0.5),(0,0),(1,0)])
     dst=np.float32([(0,1), (1,1), (0,0), (1,0)])
 
     img_size = np.float32([img.shape[1],img.shape[0]])
