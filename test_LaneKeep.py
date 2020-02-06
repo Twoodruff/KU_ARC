@@ -85,15 +85,16 @@ while not exit_flag:
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 20:
-            head = car.setSteer(prev_head + 20)
+            car.setSteer(prev_head + 20)
         elif (heading-prev_head) < -20:
-            head = car.setSteer(prev_head - 20)
+            car.setSteer(prev_head - 20)
         else:
-            head = car.setSteer(heading)
+            car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
         start = time.time_ns()
         car.update()
+        head = car.getSteer()
         end = time.time_ns()
         car_time = (end - start)/1e6
 

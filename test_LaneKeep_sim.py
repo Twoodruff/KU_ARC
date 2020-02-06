@@ -73,8 +73,8 @@ while not exit_flag:
         control.run(frame)
         heading = control.update()
         end = time.time_ns()
-        control_time = (end - start)/1e6
         heading = medFilter.run(heading)
+        control_time = (end - start)/1e6
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 20:

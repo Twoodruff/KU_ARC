@@ -169,7 +169,6 @@ class MotorController:
         Function: converts angleIN to readable value for __Actuate__
         '''
         self.steer = angleIN + 90 + 8  # trim = 8
-        return float(self.steer-8)
 
 
     def setDrive(self, speedIN):
@@ -188,7 +187,7 @@ class MotorController:
         return(self.speed)
 
     def getSteer(self):
-        return(self.steer)
+        return(self.steer-8)
 
 
 class Accel:
