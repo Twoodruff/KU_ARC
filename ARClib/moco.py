@@ -1,7 +1,7 @@
 """
 File: moco.py
 Author: Thomas Woodruff
-Date: 10/14/19
+Date: 10/18/19
 Revision: 0.1
 Description: Handles all motion control for the car
 """
@@ -147,7 +147,7 @@ class MotorController:
         Function: writes to actuators
         '''
         self.run()
-        
+
         self.car.Steer(self.steer)
         #print("Steering: ", self.steer)
 
@@ -168,8 +168,7 @@ class MotorController:
 
         Function: converts angleIN to readable value for __Actuate__
         '''
-        self.steer = angleIN + 90
-        return float(self.steer)
+        self.steer = angleIN + 90 + 8  # trim = 8
 
 
     def setDrive(self, speedIN):
@@ -188,7 +187,7 @@ class MotorController:
         return(self.speed)
 
     def getSteer(self):
-        return(self.steer)
+        return(self.steer-8)
 
 
 class Accel:
@@ -282,3 +281,18 @@ class Accel:
         self.mc.run()
         self.mc.update()
         print("Stop ", curr_spd, curr_dir)
+
+
+if __name__ == "__main__":
+    import sys
+
+    car = MotorController()
+    car.setDrive(0.3)
+    car.setSteer(sys.argv[1])
+
+    try:
+        while True:
+            car.update()
+
+    except KeyboardInterrupt:
+        car.shutdown()

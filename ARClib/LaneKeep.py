@@ -1,7 +1,7 @@
 """
 File: LaneDetect.py
 Author: Thomas Woodruff
-Date: 10/25/19
+Date: 11/15/19
 Revision: 0.1
 Description: Reads in camera frame from video stream
              and detects lane lines. Classify lanes by
@@ -57,26 +57,28 @@ class LaneKeep():
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
-            #bounds in hsv color space
-            lower = np.array([hue_center-25,30,90])
+            lower = np.array([hue_center-25,30,70]) #bounds in hsv color space
             upper = np.array([hue_center+25,255,255])
             mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
 
             # CROPPING IMAGE
             crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 2   #determines how much of the frame is cropped in the vertical direction
-            top = int(self.height/n)
-            cv2.rectangle(crop, (0, top), (self.width, self.height), (255, 255, 255), -1)
+            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
+            self.top = int(self.height*n)
+            cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
 
             # EDGE DETECTION
-            self.edges = cv2.Canny(crop_im ,80,160)    #threshold parameters may need tuning for robustness
+            self.edges = cv2.Canny(crop_im ,95,135)    #threshold parameters may need tuning for robustness
 
             # LINE DETECTION
+            rho_res = 1
+            theta_res = np.pi/180
+            threshold = 50
             minLineLength = 20
             maxLineGap = 10
-            self.lines = cv2.HoughLinesP(self.edges,1,np.pi/180,50,minLineLength,maxLineGap)
+            self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,threshold,minLineLength,maxLineGap)
 
             # LANE DETECTION
             self.lanes = self.avg_lines(self.rot, self.lines)
@@ -88,7 +90,7 @@ class LaneKeep():
                 _, _, x_right, _ = self.lanes[1][0] #second row, first column
                 x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
             elif len(self.lanes)>0:
-                #if only lane is detected
+                #if only one lane is detected
                 x1, _, x2, _ = self.lanes[0][0]
                 x_off = x2-x1
             else:
@@ -209,7 +211,7 @@ class LaneKeep():
                    a lane line
         '''
         y1 = ht
-        y2 = int(y1/2)
+        y2 = self.top
         x1 = max(-wt,min(2*wt,(y1-inter)/slope))
         x2 = max(-wt,min(2*wt,(y2-inter)/slope))
         lane = [int(x1),y1,int(x2),y2]
@@ -220,16 +222,19 @@ class LaneKeep():
         # SHOW IMAGE AFTER ROTATION
         cv2.imshow('Rotated', self.rot)
         cam.show()
+        return self.rot
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
         cv2.imshow('Color', self.res)
         cam.show()
+        return self.res
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
         cv2.imshow('Edges', self.edges)
         cam.show()
+        return self.edges
 
     def showHough(self, cam):
         # SHOW IMAGE WITH DETECTED LINES
@@ -242,8 +247,9 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Hough', new)
-        cam.show()
+        # cv2.imshow('Hough', new)
+        # cam.show()
+        return new
 
     def showLanes(self, cam):
         # SHOW IMAGE WITH DETECTED LANES
@@ -258,6 +264,7 @@ class LaneKeep():
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
         cv2.imshow('Lanes', new)
         cam.show()
+        return new
 
     def showHeading(self, cam, heading):
         # SHOW IMAGE WITH DETECTED LANES & HEADING DIRECTION
@@ -268,7 +275,7 @@ class LaneKeep():
             x1 = int(self.width/2)
             y1 = self.height
             x2 = int(x1 + (self.height/2)*math.tan(rad))
-            y2 = int(self.height/2)
+            y2 = self.top
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
                 for x1,y1,x2,y2 in line:
@@ -277,8 +284,9 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        cv2.imshow('Heading', new)
-        cam.show()
+        # cv2.imshow('Heading', new)                                            #commented only for debug
+        #cam.show()
+        return new
 
 
 if __name__ == "__main__":

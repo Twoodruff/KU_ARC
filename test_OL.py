@@ -1,7 +1,7 @@
 """
 File: test_OL.py
 Author: Thomas Woodruff
-Date: 8/20/19
+Date: 10/9/19
 Revision: 0.9.1
 Description: Test code for main with open-loop control.
 """

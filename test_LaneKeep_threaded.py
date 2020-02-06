@@ -1,7 +1,7 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 10/25/19
+Date: 1/2/20
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
@@ -9,11 +9,13 @@ Description: Test code for main with lane keeping.
 #from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.LaneKeep import LaneKeep
-from ARClib.tools import median
-import threading
+from ARClib.tools import median, memory
 
 import time
 import sys
+from pathlib import Path
+import threading
+import queue
 
 # GLOBAL VARIABLES
 drivefreq = 10  # Hz
@@ -26,11 +28,30 @@ exit_flag = 0
 CAM_PORT = 0
 filter_size = 3
 
+#filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
+filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
+
 # PART OBJECTS
 #car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
 medFilter = median(filter_size)
+mem = memory(filepath)
+
+# THREADS
+image_queue = queue.Queue()
+
+def memory_op():
+    while not exit_flag:
+        try:
+            image = image_queue.get()
+            mem.saveImage(image)
+            image_queue.task_done()
+        except queue.Empty:
+            break
+
+mem_thread = threading.Thread(target = memory_op)
+mem_thread.start()
 
 #car_thread = threading.Thread(target = car.run)
 cam_thread = threading.Thread(target = cam.run)
@@ -43,7 +64,10 @@ time.sleep(1)
 heading = 0
 prev_head = heading
 loop = 1
-#car.setDrive(curr_spd)
+car.setDrive(curr_spd)
+car.setSteer(curr_dir)
+cam.run() #grab initial frame to reduce capture time on first loop
+car.update()
 
 # DRIVE LOOP
 while not exit_flag:
@@ -52,48 +76,66 @@ while not exit_flag:
         start_loop = time.time_ns()
 
         # GET CAMERA INPUT
-        #cam.run()
+        start = time.time_ns()
+        cam.run()
         frame = cam.update()
+        end = time.time_ns()
+        cam_time = (end - start)/1e6
 
         # COMPUTE SETPOINT HEADING ANGLE
+        start = time.time_ns()
         control.run(frame)
-        headingi = control.update()
-        heading = medFilter.run(headingi)
+        heading = control.update()
+        end = time.time_ns()
+        control_time = (end - start)/1e6
+        heading = medFilter.run(heading)
 
         # PREVENT OVERSTEERING
-        # if (heading-prev_head) > 10:
-        #     head = car.setSteer(prev_head + 10)
-        # elif (heading-prev_head) < -10:
-        #     head = car.setSteer(prev_head - 10)
-        # else:
-        #     head = car.setSteer(heading)
+        if (heading-prev_head) > 20:
+            car.setSteer(prev_head + 20)
+        elif (heading-prev_head) < -20:
+            car.setSteer(prev_head - 20)
+        else:
+            car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
-        #car.update()
-        print('car update')
-
-        prev_head = heading - 90
-        loop += 1
+        start = time.time_ns()
+        car.update()
+        head = car.getSteer()
+        end = time.time_ns()
+        car_time = (end - start)/1e6
 
         # SHOW LANES
         #control.showHeading(cam, head-90)
 
+        # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
+        start = time.time_ns()
+        image_queue.put((control.showHeading(cam, head-90), head-90, loop))
+        # image_queue.put((control.showHough(cam), head-90, loop))
+        end = time.time_ns()
+        mem_time = (end - start)/1e6
+        # #print("queue size: ", image_queue.qsize())
+
         # END LOOP AND WAIT
-        loop_time = time.time_ns() - start_loop
+        prev_head = head - 90
+        loop += 1
+
+        loop_time = (time.time_ns() - start_loop)/1e6
         extra_time = dt-loop_time/1e9
         if extra_time >= 0:
             time.sleep(extra_time)
-        else:
-            time.sleep(dt-extra_time)
+
+        print("cam time: {}\ncontrol time: {}\ncar time: {}\nmemory time: {}\nloop time: {}\n".format(cam_time,control_time,car_time,mem_time,loop_time))
+
 
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
         exit_flag = 1
         #car.shutdown()
         control.shutdown()
-        cam.shutdown()
-        cam_thread.join()
+        mem_thread.join(timeout=3)
+        image_queue.join()
         print(loop)
-        pass
+        break
 
 sys.exit(1)
