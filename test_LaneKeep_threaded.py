@@ -6,7 +6,7 @@ Revision: 0.1
 Description: Test code for main with lane keeping.
 """
 
-from ARClib.moco import MotorController
+#from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.LaneKeep import LaneKeep
 from ARClib.tools import median, memory
@@ -32,7 +32,7 @@ filter_size = 3
 filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 
 # PART OBJECTS
-car = MotorController()
+#car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
 medFilter = median(filter_size)
@@ -52,6 +52,13 @@ def memory_op():
 
 mem_thread = threading.Thread(target = memory_op)
 mem_thread.start()
+
+#car_thread = threading.Thread(target = car.run)
+cam_thread = threading.Thread(target = cam.run)
+#control_thread =
+
+cam_thread.start()
+time.sleep(1)
 
 # LOOP INITIALIZATIONS
 heading = 0
@@ -124,8 +131,7 @@ while not exit_flag:
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
         exit_flag = 1
-        car.shutdown()
-        cam.shutdown()
+        #car.shutdown()
         control.shutdown()
         mem_thread.join(timeout=3)
         image_queue.join()
