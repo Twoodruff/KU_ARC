@@ -1,12 +1,12 @@
 """
 File: test_LaneKeep.py
 Author: Thomas Woodruff
-Date: 1/2/20
+Date: 2/6/20
 Revision: 0.1
 Description: Test code for main with lane keeping.
 """
 
-#from ARClib.moco import MotorController
+from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.LaneKeep import LaneKeep
 from ARClib.tools import median, memory
@@ -18,7 +18,7 @@ import threading
 import queue
 
 # GLOBAL VARIABLES
-drivefreq = 10  # Hz
+drivefreq = 7  # Hz
 dt = 1 / drivefreq  # sec
 
 curr_spd = 0.3  # [-1,1]
@@ -32,7 +32,7 @@ filter_size = 3
 filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 
 # PART OBJECTS
-#car = MotorController()
+car = MotorController()
 cam = camera(CAM_PORT)
 control = LaneKeep()
 medFilter = median(filter_size)
@@ -42,7 +42,7 @@ mem = memory(filepath)
 image_queue = queue.Queue()
 
 def memory_op():
-    while not exit_flag:
+    while True:
         try:
             image = image_queue.get()
             mem.saveImage(image)
@@ -53,12 +53,6 @@ def memory_op():
 mem_thread = threading.Thread(target = memory_op)
 mem_thread.start()
 
-#car_thread = threading.Thread(target = car.run)
-cam_thread = threading.Thread(target = cam.run)
-#control_thread =
-
-cam_thread.start()
-time.sleep(1)
 
 # LOOP INITIALIZATIONS
 heading = 0
@@ -131,7 +125,7 @@ while not exit_flag:
     #if Ctrl-C is pressed, end everything
     except KeyboardInterrupt:
         exit_flag = 1
-        #car.shutdown()
+        car.shutdown()
         control.shutdown()
         mem_thread.join(timeout=3)
         image_queue.join()
