@@ -85,15 +85,16 @@ while not exit_flag:
 
         # PREVENT OVERSTEERING
         if (heading-prev_head) > 20:
-            head = car.setSteer(prev_head + 20)
+            car.setSteer(prev_head + 20)
         elif (heading-prev_head) < -20:
-            head = car.setSteer(prev_head - 20)
+            car.setSteer(prev_head - 20)
         else:
-            head = car.setSteer(heading)
+            car.setSteer(heading)
 
         # APPLY CONTROL INPUTS
         start = time.time_ns()
         car.update()
+        head = car.getSteer()
         end = time.time_ns()
         car_time = (end - start)/1e6
 
@@ -102,11 +103,11 @@ while not exit_flag:
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        #image_queue.put((control.showHeading(cam, head-90), head-90, loop))
-        image_queue.put((control.showHough(cam), head-90, loop))
+        image_queue.put((control.showHeading(cam, head-90), head-90, loop))
+        # image_queue.put((control.showHough(cam), head-90, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
-        #print("queue size: ", image_queue.qsize())
+        # #print("queue size: ", image_queue.qsize())
 
         # END LOOP AND WAIT
         prev_head = head - 90

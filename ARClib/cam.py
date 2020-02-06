@@ -17,13 +17,14 @@ class camera():
     def __init__(self, port):
         # START CAMERA
         self.cam = cv2.VideoCapture(port)
+        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
         self.running = True
 
     def run(self):
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
-            _,frame = self.cam.read()
-            self.frame = frame
+            ret,frame = self.cam.read()
+            self.frame = undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME
@@ -56,6 +57,20 @@ def rotate(image, angle):
 
     # APPLY TRANSFORMATION AND RETURN
     return cv2.warpAffine(image, M, (w, h))
+
+
+def projective_warp(img):
+    dst_size=(640,480)
+    src=np.float32([(0.25,0.5),(0.80,0.5),(0,0),(1,0)])
+    dst=np.float32([(0,1), (1,1), (0,0), (1,0)])
+
+    img_size = np.float32([img.shape[1],img.shape[0]])
+    src = src * img_size
+    dst = dst * img_size #np.float32(dst_size)
+
+    M = cv2.getPerspectiveTransform(src, dst)
+    warped = cv2.warpPerspective(img, M, dst_size)
+    return warped
 
 
 def getDistortionParams():
