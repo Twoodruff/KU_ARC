@@ -169,7 +169,8 @@ class IMU:
 
 
 if __name__ == '__main__':
-    imu = IMU('COM3')
+    #imu = IMU('COM3')
+    imu = IMU('/dev/ttyACM0')
     i = 0
     while i < 200:
         imu.run()
