@@ -15,9 +15,10 @@ import numpy as np
 import math
 
 from . import cam
+from .lane_control import TwoLines
 
 
-class LaneKeep():
+class ImageProcess():
     def __init__(self, detect = [255,0,0], color = [0,255,0]):
         '''
         Inputs:
@@ -29,8 +30,8 @@ class LaneKeep():
         det_color = np.uint8([[detect]])
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
-        self.prevxoff = 0
         self.running = True
+        self.track  = TwoLines()
 
 
     def run(self, frame):
@@ -81,141 +82,17 @@ class LaneKeep():
             self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,threshold,minLineLength,maxLineGap)
 
             # LANE DETECTION
-            self.lanes = self.avg_lines(self.rot, self.lines)
-
-            # COMPUTE HEADING ANGLE
-            if len(self.lanes)>1:
-                #if both lanes are detected, find the middle
-                _, _, x_left, _ = self.lanes[0][0]  #first row, first column
-                _, _, x_right, _ = self.lanes[1][0] #second row, first column
-                x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
-            elif len(self.lanes)>0:
-                #if only one lane is detected
-                x1, _, x2, _ = self.lanes[0][0]
-                x_off = x2-x1
-            else:
-                #if no lanes are detected, use previous heading
-                x_off = self.prevxoff
-
-            self.prevxoff = x_off
-            y_off = int(self.height/2)
-            self.heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
-            self.heading_deg = int(self.heading_rad * 180 / math.pi)  #convert to deg
+            self.lanes = self.track.track(self.rot, self.lines)
+            self.heading = self.track.control(self.lanes)
 
 
     def update(self):
-        return self.heading_deg
+        return self.heading
 
 
     def shutdown(self):
         self.running = False
 
-
-    def avg_lines(self, frame, lines):
-        '''
-        Inputs:
-            frame : image that needs processing
-
-            lines : set of lines detected form Hough Transform
-
-        Function: uses detected lines to determine the lanes
-                  of the track
-
-        Outputs:
-            lane_line : left and right lane of the track
-        '''
-        import numpy.polynomial.polynomial as poly
-        # INITIALIZE ARRAYS
-        lane_line = []
-        ll_s = []
-        lr_s = []
-        rr_s = []
-        rl_s = []
-
-        # RETURN IF NO LINES ARE FOUND
-        if lines is None:
-            print('No lines to detect')
-            return lane_line
-
-        # CLASSIFY LINES TO LEFT OR RIGHT LANE
-        for line in lines:
-            for x1,y1,x2,y2 in line:
-                #find slope using points and categorize left from right
-                fit = poly.polyfit((x1,x2), (y1,y2), 1)
-                slope = fit[1]
-                intercept = fit[0]
-
-                #classification of lines
-                if slope < 0:
-                    if x2 < int(self.width*(2/3)):
-                        #neg slope on left side (straight/right turn)
-                        ll_s.append((slope,intercept))
-                    else:
-                        #neg slope on right side (right turn)
-                        lr_s.append((slope,intercept))
-                elif slope > 0:
-                    if x2 >  int(self.width*(1/3)):
-                        #pos slope on right side (straight/left turn)
-                        rr_s.append((slope,intercept))
-                    else:
-                        #pos slope on left side (left turn)
-                        rl_s.append((slope,intercept))
-                else:
-                    pass
-
-        # FIND AVG OF EACH TYPE OF LINE
-        avglr = np.mean(lr_s, axis = 0)
-        #print("\nRight", avglr)
-
-        avgll = np.mean(ll_s, axis = 0)
-        #print("Strt/Right", avgll)
-                              #debug
-        avgrr = np.mean(rr_s, axis = 0)
-        #print("Strt/Left", avgrr)
-
-        avgrl = np.mean(rl_s, axis = 0)
-        #print("Left", avgrl)
-
-        # CREATE LANES BASED ON AVG's
-        #left lane
-        if len(ll_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgll[0],avgll[1])
-            lane_line.append([left_lane])
-        elif len(rl_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgrl[0],avgrl[1])
-            lane_line.append([left_lane])
-
-        #right lane
-        if len(rr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avgrr[0],avgrr[1])
-            lane_line.append([right_lane])
-        elif len(lr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avglr[0],avglr[1])
-            lane_line.append([right_lane])
-
-        #print("lane lines", lane_line)     #debug
-        return lane_line
-
-
-    def lane(self,ht,wt,slope,inter):
-        '''
-        Inputs:
-            ht,wt : size of image frame
-            slope : avg slope of lines
-            inter : avg intercept of lines
-
-        Function: helper function to compute lanes
-
-        Outputs:
-            lane : set of two (x,y) pairs that define
-                   a lane line
-        '''
-        y1 = ht
-        y2 = self.top
-        x1 = max(-wt,min(2*wt,(y1-inter)/slope))
-        x2 = max(-wt,min(2*wt,(y2-inter)/slope))
-        lane = [int(x1),y1,int(x2),y2]
-        return lane
 
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
     def showRot(self, cam):
@@ -284,8 +161,8 @@ class LaneKeep():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        # cv2.imshow('Heading', new)                                            #commented only for debug
-        #cam.show()
+        # cv2.imshow('Heading', new)
+        # cam.show()
         return new
 
 

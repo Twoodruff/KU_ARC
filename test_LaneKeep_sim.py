@@ -7,7 +7,7 @@ Description: Test code for main with lane keeping.
 """
 
 from ARClib.cam import camera
-from ARClib.LaneKeep import LaneKeep
+from ARClib.image_process import ImageProcess
 from ARClib.tools import median, memory
 
 import time
@@ -29,7 +29,7 @@ filter_size = 3
 # PART OBJECTS
 cam = camera('testrun2.avi')
 print("Camera fps: ",cam.fps)
-control = LaneKeep()
+control = ImageProcess()
 medFilter = median(filter_size)
 mem = memory(filepath)
 
@@ -37,7 +37,7 @@ mem = memory(filepath)
 image_queue = queue.Queue()
 
 def memory_op():
-    while not exit_flag:
+    while True:
         try:
             image = image_queue.get()
             mem.saveImage(image)
