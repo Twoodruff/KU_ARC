@@ -15,7 +15,7 @@ import numpy as np
 import math
 
 from . import cam
-from .lane_control import TwoLines
+from .lane_control import TwoLines, MultiLine
 
 
 class ImageProcess():
@@ -31,7 +31,7 @@ class ImageProcess():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = TwoLines()
+        self.track  = MultiLine()
 
 
     def run(self, frame):

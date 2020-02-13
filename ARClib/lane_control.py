@@ -10,6 +10,7 @@ Description: Helper classes that performs lane detection and control.
 import numpy as np
 import cv2
 import math
+from . import tools
 
 class TwoLines:
     '''
@@ -155,9 +156,9 @@ class TwoLines:
         return heading_deg
 
 
-class MultiLane():
+class MultiLine():
     def __init__(self):
-        pickle = 1
+        self.prevxoff = 0
 
     def track(self, frame, lines):
         '''
@@ -172,6 +173,9 @@ class MultiLane():
             lane_line : left and right lane of the track
         '''
         import numpy.polynomial.polynomial as poly
+
+        self.height, self.width, _ = frame.shape
+
         # INITIALIZE ARRAYS
         lane_line = []
         angle1 = None
@@ -269,3 +273,80 @@ class MultiLane():
         #         break
 
         return lane_line
+
+    def control(self, lanes):
+        # # COMPUTE HEADING ANGLE
+        # if len(lanes)==2:
+        #     lane = []
+        #     closestY = []
+        #     for i in range(len(lanes)):
+        #         closestY.append(lanes[i].y)
+        #
+        #     closeY1 = max(closestY)
+        #     closestY.remove(closeY1)
+        #     closeY2 = max(closestY)
+        #     lane.append(lanes[closeY1].lane(self.height, self.width))
+        #     lane.append(lanes[closeY2].lane(self.height, self.width))
+        #
+        #     #if going straight, find the middle
+        #     if lanes[0].m < 0 or lanes[1].m < 0:
+        #         if lanes[0].m > 0 or lanes[1].m > 0:
+        #             x_left = lane[0][2]  #first row, first column
+        #             x_right = lane[1][2] #second row, first column
+        #             x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+        #
+        #     #if turning, use the closest lane's slope
+        #     if lanes[0].m < 0 and lanes[1].m < 0:
+        #         if math.fabs(lanes[0].m) > math.fabs(lanes[1].m):
+        #             x2 = lanes[0].point(y=self.height/2)
+        #             x1 = lanes[0].point(y=self.height)
+        #         else:
+        #             x2 = lanes[1].point(y=self.height/2)
+        #             x1 = lanes[1].point(y=self.height)
+        #
+        #         x_off = x2-x1
+        #     elif lanes[0].m > 0 and lanes[1].m > 0:
+        #         if math.fabs(lanes[0].m) > math.fabs(lanes[1].m):
+        #             x2 = lanes[0].point(y=self.height/2)
+        #             x1 = lanes[0].point(y=self.height)
+        #         else:
+        #             x2 = lanes[1].point(y=self.height/2)
+        #             x1 = lanes[1].point(y=self.height)
+        #
+        #         x_off = x2-x1
+        #
+        # elif len(lanes)==1:
+        #     #if only one lane is detected
+        #     x2 = lanes[0].point(y=self.height/2)
+        #     x1 = lanes[0].point(y=self.height)
+        #     x_off = x2-x1
+        # else:
+        #     #if no lanes are detected, use previous heading
+        #     x_off = self.prevxoff
+        #
+        # self.prevxoff = x_off
+        # y_off = int(self.height/2)
+        # self.heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
+        # self.heading_deg = int(self.heading_rad * 180 / math.pi)  #convert to deg
+
+        # COMPUTE HEADING ANGLE
+        if len(lanes)>1:
+            lane = sorted(lanes, key=lambda line: line.y, reverse=True)
+
+            #if both lanes are detected, find the middle
+            _, _, x_left, _ = lane[0].lane(self.height, self.width)  #first row, first column
+            _, _, x_right, _ = lane[1].lane(self.height, self.width) #second row, first column
+            x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
+        elif len(lanes)>0:
+            #if only one lane is detected
+            x1, _, x2, _ = lanes[0].lane(self.height, self.width)
+            x_off = x2-x1
+        else:
+            #if no lanes are detected, use previous heading
+            x_off = self.prevxoff
+
+        self.prevxoff = x_off
+        y_off = int(self.height/2)
+        heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
+        heading_deg = int(heading_rad * 180 / math.pi)  #convert to deg
+        return heading_deg
