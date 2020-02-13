@@ -153,3 +153,119 @@ class TwoLines:
         heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
         heading_deg = int(heading_rad * 180 / math.pi)  #convert to deg
         return heading_deg
+
+
+class MultiLane():
+    def __init__(self):
+        pickle = 1
+
+    def track(self, frame, lines):
+        '''
+        Inputs:
+            frame : image that needs processing
+            lines : set of lines detected form Hough Transform
+
+        Function: uses detected lines to determine the lanes
+                  of the track
+
+        Outputs:
+            lane_line : left and right lane of the track
+        '''
+        import numpy.polynomial.polynomial as poly
+        # INITIALIZE ARRAYS
+        lane_line = []
+        angle1 = None
+        angle2 = None
+        angle3 = None
+        angle4 = None
+        ang1 = []
+        ang2 = []
+        ang3 = []
+        ang4 = []
+
+        # RETURN IF NO LINES ARE FOUND
+        if lines is None:
+            print('No lines to detect')
+            return lane_line
+
+        # CLASSIFY LINES BASED ON SLOPE
+        for line in lines:
+            for x1,y1,x2,y2 in line:
+                #find slope using points and categorize left from right
+                fit = poly.polyfit((x1,x2), (y1,y2), 1)
+                slope = fit[1]
+                intercept = fit[0]
+                angle = math.degrees(math.atan((y2-y1)/(x2-x1)))
+                # print("angle: {}\nslope: {}\n".format(angle,slope))
+
+                # classification by slope of line (using the angle)
+                if angle1 is None:
+                    angle1 = angle
+                    ang1 = [(slope,intercept, x1, y1)]
+                elif (math.fabs(angle-angle1)>10):
+                    if angle2 is None:
+                        angle2 = angle
+                        ang2 = [(slope,intercept, x1, y1)]
+                    elif (math.fabs(angle-angle2)>10):
+                        if angle3 is None:
+                            angle3 = angle
+                            ang3 = [(slope,intercept, x1, y1)]
+                        elif (math.fabs(angle-angle3)>10):
+                            if angle4 is None:
+                                angle4 = angle
+                                ang4 = [(slope,intercept, x1, y1)]
+                            else:
+                                ang4.append((slope,intercept, x1, y1))
+                        else:
+                            ang3.append((slope,intercept, x1, y1))
+                    else:
+                        ang2.append((slope,intercept, x1, y1))
+                else:
+                    ang1.append((slope,intercept, x1, y1))
+
+        # FIND AVG OF EACH TYPE OF LINE
+        avg1 = np.nanmean(ang1, axis = 0)
+        # print("\nline1: ", avg1)
+
+        avg2 = np.nanmean(ang2, axis = 0)
+        # print("line2: ", avg2)
+
+        avg3 = np.nanmean(ang3, axis = 0)
+        # print("line3: ", avg3)
+
+        avg4 = np.nanmean(ang4, axis = 0)
+        # print("line4: {}".format(avg4))
+
+        # CREATE LINE OBJECTS BASED ON AVG's
+        if len(ang1) > 0:
+            line1 = tools.line(avg1[0], avg1[1], avg1[2], avg1[3])
+            #lane1 = line1.lane(self.height, self.width, avg1[2], avg1[3])
+            lane_line.append(line1)
+
+        if len(ang2) > 0:
+            line2 = tools.line(avg2[0], avg2[1], avg2[2], avg2[3])
+            #lane2 = line2.lane(self.height, self.width, avg2[2], avg2[3])
+            lane_line.append(line2)
+
+        if len(ang3) > 0:
+            line3 = tools.line(avg3[0], avg3[1], avg3[2], avg3[3])
+            #lane3 = line3.lane(self.height, self.width, avg3[2], avg3[3])
+            lane_line.append(line3)
+
+        if len(ang4) > 0:
+            line4 = tools.line(avg4[0], avg4[1], avg4[2], avg4[3])
+            #lane4 = line4.lane(self.height, self.width, avg4[2], avg4[3])
+            lane_line.append(line4)
+
+        # self.int_pts = []
+        # for i in range(len(lane_line)):
+        #     try:
+        #         x, y = lane_line[i].intersection(self.height, self.width, lane_line[i+1].m, lane_line[i+1].b)
+        #         self.int_pts.append((x,y))
+        #         # if self.int_pts[i][0] > 0:
+        #         #     print("intersection point: {},{}".format(self.int_pts[i][0], self.int_pts[i][1]))
+        #
+        #     except IndexError:
+        #         break
+
+        return lane_line
