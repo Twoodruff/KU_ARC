@@ -196,15 +196,32 @@ if __name__ == '__main__':
 
     velx = []
     vely = []
+    head = []
     tim = np.linspace(0, 10, num=100)
     for i in (tim):
         imu.run()
         vel_x, vel_y, heading = imu.update()
         velx.append(vel_x)
         vely.append(vel_y)
+        head.append(heading)
         print("x-velocity: {}\ny-velocity: {}\nheading: {}\n".format(vel_x, vel_y, heading))
         time.sleep(0.1)
 
-    plt.plot(tim, velx)
-    plt.plot(tim, vely)
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
+    ax1.plot(tim, velx, label='x-velocity')
+    ax1.plot(tim, vely, label='y-velocity')
+    ax1.legend()
+    ax1.set_xlabel('time (s)')
+    ax1.set_ylabel('velocity (m/s)')
+    ax1.axis('on')
+    ax2.plot(tim, head)
+    #ax2.plot(timet, y_accel, label='y-acceleration')
+    ax2.set_xlabel('time (s)')
+    ax2.set_ylabel('heading angle (deg)')
+    ax2.legend()
+    #plt.plot(loop_time, vel_z)
     plt.show()
+
+    #plt.plot(tim, velx)
+    #plt.plot(tim, vely)
+    #plt.show()
