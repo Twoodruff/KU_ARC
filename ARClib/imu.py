@@ -20,10 +20,10 @@ class IMU:
     '''
     description of class
     '''
-    def __init__(self, serial_device, output='rpy'):  #add in default for RPI
+    def __init__(self, serial_device='/dev/ttyACM0', output='rpy'):
         '''
         Inputs:
-            serial_device : the machine IMU is connected to
+            serial_device : the port IMU is connected to
             output : 'rpy' - roll, pitch, yaw
                      'quat' - quaternion (x,y,z,w)
         '''
@@ -43,11 +43,13 @@ class IMU:
             self.send_command(self.serial_port, 'asc_out,QUATIMU')
         else:
             raise Exception('Invalid output type. Please use \'rpy\' or \'quat\'')
+        print('IMU Setup Complete...')
 
         # INITIALIZE VARS
         self.vel_x = 0
         self.vel_y = 0
         self.heading = 0
+        self.heading2 = 0
         self.last = time.time()
         self.running = True
 
@@ -56,11 +58,9 @@ class IMU:
 
     def run(self):
         '''
-        Inputs: (optional)
-            input1 : range/description
-            input2 : range/description
+        Inputs: N/A
 
-        Function: description
+        Function: triggers measurement, recieves data, parses data
         '''
 
         if self.running:
@@ -99,7 +99,6 @@ class IMU:
                 # accel_x, accel_y, accel_z = self.remove_gravity(accel_x, accel_y, accel_z, quaternion vars)
                 self.vel_x = self.vel_x + accel_x*9.81*dt
                 self.vel_y = self.vel_y + accel_y*9.81*dt
-                #vel_z = vel_z + accel_z*9.81*dt
                 # self.heading = quaternion eq
 
             self.last = self.current
@@ -110,15 +109,18 @@ class IMU:
         Function: returns x,y-velocity and heading angle
 
         Outputs:
-            vel_ : m/s
+            vel : m/s
             heading : degrees
         '''
-        self.vel_x = self.vel_x + (self._accel_x - self.calib_accel[0])*9.81*self.dt
-        self.vel_y = self.vel_y + (self._accel_y - self.calib_accel[1])*9.81*self.dt
+        self.vel_x = self.vel_x + (self._accel_x - self.calib[0])*9.81*self.dt
+        self.vel_y = self.vel_y + (self._accel_y - self.calib[1])*9.81*self.dt
+        self.heading = self.heading + (self._gyro_z - self.calib[2])*self.dt
 
-        self.heading = self._yaw - self.heading_ref #self.heading + (self._yaw - self.heading) - self.heading_ref
+        return self.vel_x, self.vel_y, self.heading
 
-        return self.vel_x, self.vel_y, self.heading, self._gyro_x, self._gyro_y, self._gyro_z
+        # used for testing
+        # self.heading2 = self._yaw - self.heading_ref
+        # return self.vel_x, self.vel_y, self.heading2, self.heading, self._gyro_z
 
 
     def shutdown(self):
@@ -130,11 +132,12 @@ class IMU:
     def initialize(self):
         '''
         Function: calibrate to account for drift
-                  average accleration over 3 sec
+                  average accleration/angular velocity over 3 sec
         '''
         acc_x = []
         acc_y = []
         acc_z = []
+        w_vel_z = []
         init_time = 3
         start = time.time()
         while time.time()<(start+init_time):
@@ -142,10 +145,12 @@ class IMU:
             acc_x.append(self._accel_x)
             acc_y.append(self._accel_y)
             acc_z.append(self._accel_z)
-        self.calib_accel = [np.mean(acc_x), np.mean(acc_y), np.mean(acc_z)]
+            w_vel_z.append(self._gyro_z)
+            self.heading_ref = self._yaw
 
-        self.run()
-        self.heading_ref = self._yaw
+        self.calib = [np.mean(acc_x), np.mean(acc_y), np.mean(w_vel_z)]
+        print('IMU Calibration Complete...')
+
 
     def send_command(self, serial_port, cmd_msg):
         '''
@@ -169,7 +174,7 @@ class IMU:
         if(cmd_msg != '@trig'):
             while(True):
                 line = serial_port.readline().strip().decode()
-                print(line[1])
+                #print(line[1])
                 if(line[0] == '~'):
                     return line
 
@@ -198,27 +203,27 @@ class IMU:
 
 if __name__ == '__main__':
     #imu = IMU('COM3')
-    imu = IMU('/dev/ttyACM0')
+    imu = IMU()
 
     velx = []
     vely = []
     head = []
     gyro = []
-    seconds = 3
+    seconds = 15
     tim = np.linspace(0, seconds, num=10*seconds)
     for i in (tim):
         imu.run()
-        vel_x, vel_y, heading, gyrox, gyroy, gyroz = imu.update()
+        vel_x, vel_y, heading, heading2, gyroz = imu.update()
         velx.append(vel_x)
         vely.append(vel_y)
-        head.append(heading)
-        gyro.append([gyrox, gyroy, gyroz])
+        head.append([heading, heading2])
+        gyro.append(gyroz)
 
         #print("x-velocity: {}\ny-velocity: {}\nheading: {}\n".format(vel_x, vel_y, heading))
         #print("gyro x: {}\ngyro y: {}\ngyro z: {}\n".format(gyrox, gyroy, gyroz))
         time.sleep(0.1)
 
-    gyro = np.array(gyro)
+    head = np.array(head)
 
     #plotting results
     fig1, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex='col')
@@ -235,13 +240,12 @@ if __name__ == '__main__':
     #ax2.legend()
 
     fig2, (ax3, ax4) = plt.subplots(nrows=2, ncols=1, sharex='col')
-    ax3.plot(tim, gyro[:,0], label='theta_x dot')
-    ax3.plot(tim, gyro[:,1], label='theta_y dot')
-    ax3.plot(tim, gyro[:,2], label='theta_z dot')
+    ax3.plot(tim, gyro, label='theta_z dot')
     ax3.set_ylabel('angular velocity (deg/s)')
     ax3.legend()
 
-    ax4.plot(tim, head)
+    ax4.plot(tim, head[:,0], label='Absolute')
+    ax4.plot(tim, head[:,1], label='From Velocity')
     ax4.set_xlabel('time (s)')
     ax4.set_ylabel('angle (deg)')
     ax4.legend()
