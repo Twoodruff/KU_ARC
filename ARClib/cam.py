@@ -1,7 +1,7 @@
 """
 File: cam.py
 Author: Thomas Woodruff
-Date: 11/11/19
+Date: 02/19/20
 Revision: 0.1
 Description: Utility functions for camera
              object.
@@ -32,7 +32,7 @@ class camera():
 
     def show(self):
         # DISPLAY AN IMAGE/VIDEO STREAM
-        k = cv2.waitKey(1)
+        k = cv2.waitKey(0)
         if k == ord('q') & 0xFF:
             self.shutdown()
 
@@ -158,9 +158,19 @@ def undistortFishEye(image):
 
 
 if __name__ == "__main__":
-    getDistortionParams()
-    #cam = camera(0)
-    #cam.run()
-    #undistort = cam.update()
-    #cv2.imshow("undistorted",undistort)
-    #cam.show()
+    # getDistortionParams()
+    # cam = camera(0)
+    cam = cv2.VideoCapture(0)
+    while(1):
+        #cam.run()
+        #undistort = cam.update()
+        ret,frame = cam.read()
+        undistort = undistortFishEye(frame)
+        cv2.imshow("undistorted",undistort)
+        #cam.show()
+        k = cv2.waitKey(1)
+        if k == ord('q') & 0xFF:
+            break
+
+    cam.release()
+    cv2.destroyAllWindows()
