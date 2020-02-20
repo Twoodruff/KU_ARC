@@ -374,9 +374,9 @@ class OneLine():
 
     def control(self, position):
         pid.setSP(self.width/2)
-        input = pid.update(position, 0.1)
+        pid_input = pid.update(position, 0.1)
 
         #map input to steering command
-        steer_cmd = input
+        steer_cmd = pid_input
         heading = steer_cmd
-        return input 
+        return pid_input

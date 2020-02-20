@@ -27,7 +27,7 @@ exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('testrun2.avi')
+cam = camera('one_line_data.avi')
 print("Camera fps: ",cam.fps)
 control = ImageProcess()
 medFilter = median(filter_size)
@@ -73,16 +73,16 @@ while not exit_flag:
         control.run(frame)
         heading = control.update()
         end = time.time_ns()
-        heading = medFilter.run(heading)
+        # heading = medFilter.run(heading)
         control_time = (end - start)/1e6
 
         # PREVENT OVERSTEERING
-        if (heading-prev_head) > 20:
-            head = prev_head + 20
-        elif (heading-prev_head) < -20:
-            head = prev_head - 20
-        else:
-            head = heading
+        # if (heading-prev_head) > 20:
+        #     head = prev_head + 20
+        # elif (heading-prev_head) < -20:
+        #     head = prev_head - 20
+        # else:
+        #     head = heading
 
         # SHOW LANES
         # control.showHeading(cam, head)
@@ -90,7 +90,7 @@ while not exit_flag:
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
         #image_queue.put((control.showHeading(cam, head), head, loop))
-        #image_queue.put((control.showHough(cam), head, loop))
+        image_queue.put((control.showRot(cam), head, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
         #print("queue size: ", image_queue.qsize())

@@ -15,7 +15,7 @@ import numpy as np
 import math
 
 from . import cam
-from .lane_control import TwoLines, MultiLine
+from .lane_control import TwoLines, MultiLine, OneLine
 
 
 class ImageProcess():
@@ -31,7 +31,7 @@ class ImageProcess():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = TwoLines()
+        self.track  = OneLine()
 
 
     def run(self, frame):
@@ -51,7 +51,7 @@ class ImageProcess():
             self.height, self.width, _ = frame.shape
 
             # ROTATE FRAME
-            self.rot = cam.rotate(frame,180)
+            self.rot = frame  # cam.rotate(frame,180)
 
             # CROPPING IMAGE
             crop = np.zeros(self.rot.shape, dtype = 'uint8')
