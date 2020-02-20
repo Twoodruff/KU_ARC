@@ -31,7 +31,7 @@ class ImageProcess():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = MultiLine()
+        self.track  = TwoLines()
 
 
     def run(self, frame):
@@ -53,8 +53,17 @@ class ImageProcess():
             # ROTATE FRAME
             self.rot = cam.rotate(frame,180)
 
+            # CROPPING IMAGE
+            crop = np.zeros(self.rot.shape, dtype = 'uint8')
+            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
+            self.top = int(self.height*n)
+            cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
+            self.crop_im = cv2.bitwise_and(src1 = self.rot, src2 = crop)
+
+            self.proj = cam.projective_warp(self.crop_im)
+
             # CONVERTING COLOR SPACE
-            hsv = cv2.cvtColor(self.rot, cv2.COLOR_BGR2HSV)
+            hsv = cv2.cvtColor(self.proj, cv2.COLOR_BGR2HSV)
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
@@ -63,15 +72,8 @@ class ImageProcess():
             mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
 
-            # CROPPING IMAGE
-            crop = np.zeros(self.res.shape, dtype = 'uint8')
-            n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
-            self.top = int(self.height*n)
-            cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
-            crop_im = cv2.bitwise_and(src1 = self.res, src2 = crop)
-
             # EDGE DETECTION
-            self.edges = cv2.Canny(crop_im ,95,135)    #threshold parameters may need tuning for robustness
+            self.edges = cv2.Canny(self.res,95,135)    #threshold parameters may need tuning for robustness
 
             # LINE DETECTION
             rho_res = 1

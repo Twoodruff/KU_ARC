@@ -350,3 +350,33 @@ class MultiLine():
         heading_rad = math.atan(x_off/y_off)            #compute heading angle (rad)
         heading_deg = int(heading_rad * 180 / math.pi)  #convert to deg
         return heading_deg
+
+
+class OneLine():
+    from . import PID
+    def __init__(self):
+        pid = PID(0.5, 1, 0)
+
+    def track(self, frame):
+        self.height, self.width, _ = frame.shape
+        #get line position
+        lane = frame[self.width,:]
+        counter = 0
+        for i in len(lane):
+            if lane[i] == 255:
+                counter = counter + 1
+                if counter = 1:
+                    first = i
+
+        pos = first + (counter/2)
+        return pos
+        #maybe use full line for future trajectory
+
+    def control(self, position):
+        pid.setSP(self.width/2)
+        input = pid.update(position, 0.1)
+
+        #map input to steering command
+        steer_cmd = input
+        heading = steer_cmd
+        return input 

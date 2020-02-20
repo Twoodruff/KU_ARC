@@ -20,6 +20,11 @@ Description: Basic PID controller.
 
 class PID:
     def __init__(self, P=1.0, I=1.0, D=0.0, setpoint=0.0):
+        '''
+        Inputs
+            P, I, D : control gains
+            setpoint : desired trajectory
+        '''
         self.Kp = P
         self.Ki = I
         self.Kd = D
@@ -38,8 +43,8 @@ class PID:
 
         e_t = self.sp - self.current                                            #current error
         de_t = (e_t - self.e)/dt                                                #derivative error
-
         self.e_int = self.e_int + e_t*dt                                        #integral error
+
         if self.e_int > self.int_max:
             self.e_int = self.int_max
         elif self.e_int < self.int_min:
@@ -79,19 +84,27 @@ class PID:
 
 
 def f(x, u, dt):
-    x_next = x + (3*x +u)*dt
+    x_next = x + (3*x + u)*dt
     return x_next
 
 if __name__ == "__main__":
 
     from numpy import zeros
+    import matplotlib.pyplot as plt
 
     x = zeros(200)
+    u_ = zeros(200)
     x[0] = 20
     pid = PID(3.7, 5, 0.5)
     dt = 0.1
 
     for i in range(199):
         u = pid.update(x[i], dt)
+        u_[i+1] = float(u)
         x[i+1] = f(x[i], u, dt)
-        print(i, x[i+1])
+        # print(i, x[i+1])
+
+    plt.plot(x, label='x')
+    plt.plot(u_, label='u')
+    plt.legend()
+    plt.show()

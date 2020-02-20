@@ -61,8 +61,9 @@ def rotate(image, angle):
 
 def projective_warp(img):
     dst_size=(640,480)
-    src=np.float32([(0.25,0.5),(0.80,0.5),(0,0),(1,0)])
-    dst=np.float32([(0,1), (1,1), (0,0), (1,0)])
+    src=np.float32([(0.25,0.5),(0.80,0.5),(0,1),(1,1)])
+    # dst=np.float32([(0,1), (1,1), (0,0), (1,0)])  #upside down
+    dst=np.float32([(0,0), (1,0), (0,1), (1,1)])  #right side up
 
     img_size = np.float32([img.shape[1],img.shape[0]])
     src = src * img_size
