@@ -29,7 +29,7 @@ filter_size = 3
 # PART OBJECTS
 cam = camera('one_line_data.avi')
 print("Camera fps: ",cam.fps)
-control = ImageProcess()
+control = ImageProcess(detect=[115,150,160])
 medFilter = median(filter_size)
 mem = memory(filepath)
 
@@ -83,9 +83,9 @@ while not exit_flag:
         #     head = prev_head - 20
         # else:
         #     head = heading
-
+        head = heading
         # SHOW LANES
-        # control.showHeading(cam, head)
+        control.showHSV(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
