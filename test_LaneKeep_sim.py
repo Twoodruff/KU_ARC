@@ -20,8 +20,8 @@ import queue
 drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
-filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
-#filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
+#filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
+filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 
 exit_flag = 0
 filter_size = 3

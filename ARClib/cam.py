@@ -24,7 +24,7 @@ class camera():
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
             ret,frame = self.cam.read()
-            self.frame = undistortFishEye(frame)
+            self.frame = frame  # undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME

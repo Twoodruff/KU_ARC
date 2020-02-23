@@ -8,7 +8,7 @@ Description: Test code for main with lane keeping.
 
 from ARClib.moco import MotorController
 from ARClib.cam import camera
-from ARClib.LaneKeep import LaneKeep
+from ARClib.image_process import ImageProcess
 from ARClib.tools import median, memory
 
 import time
@@ -18,10 +18,10 @@ import threading
 import queue
 
 # GLOBAL VARIABLES
-drivefreq = 7  # Hz
+drivefreq = 8  # Hz
 dt = 1 / drivefreq  # sec
 
-curr_spd = 0.3  # [-1,1]
+curr_spd = 0.32  # [-1,1]
 curr_dir = 0
 
 exit_flag = 0
@@ -34,7 +34,7 @@ filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 # PART OBJECTS
 car = MotorController()
 cam = camera(CAM_PORT)
-control = LaneKeep()
+control = ImageProcess(P=185, I=45, D=25)
 medFilter = median(filter_size)
 mem = memory(filepath)
 
@@ -104,8 +104,7 @@ while not exit_flag:
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        image_queue.put((control.showHeading(cam, head-90), head-90, loop))
-        # image_queue.put((control.showHough(cam), head-90, loop))
+        image_queue.put((control.showHSV(cam), head-90, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
         # #print("queue size: ", image_queue.qsize())
@@ -132,4 +131,4 @@ while not exit_flag:
         print(loop)
         break
 
-sys.exit(1)
+sys.exit(0)

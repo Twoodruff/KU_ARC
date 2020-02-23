@@ -76,6 +76,7 @@ class memory:
         os.makedirs(dt_string)
         #specify file path
         self.filepath = file / dt_string
+        print('Directory Created...')
 
 
     def saveImage(self, input):

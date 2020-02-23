@@ -19,7 +19,7 @@ from .lane_control import TwoLines, MultiLine, OneLine
 
 
 class ImageProcess():
-    def __init__(self, detect = [255,0,0], color = [0,255,0]):
+    def __init__(self, P, I, D, detect = [255,0,0], color = [0,255,0]):
         '''
         Inputs:
             detect : color of lanes to detect in BGR
@@ -31,7 +31,7 @@ class ImageProcess():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = OneLine()
+        self.track  = OneLine(P, I, D)
 
 
     def run(self, frame):
@@ -70,8 +70,8 @@ class ImageProcess():
             hue_center = self.detect_color[0][0][0]
             # lower = np.array([hue_center-5,30,70]) #bounds in hsv color space
             # upper = np.array([hue_center+5,255,170])
-            lower = np.array([hue_center-25,30,70]) #bounds in hsv color space
-            upper = np.array([hue_center+25,255,255])
+            lower = np.array([hue_center-20,50,50]) #bounds in hsv color space
+            upper = np.array([hue_center+20,255,255])
             self.mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = self.mask)
 
@@ -90,6 +90,7 @@ class ImageProcess():
             self.lanes = self.track.track(self.mask)
             print('Lane position: ',self.lanes)
             self.heading = self.track.control(self.lanes)
+            print('Heading: ',self.heading)
 
 
     def update(self):
@@ -109,9 +110,9 @@ class ImageProcess():
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
-        cv2.imshow('Color', self.mask)
-        cam.show()
-        return self.res
+        # cv2.imshow('Color', self.res)
+        # cam.show()
+        return self.mask
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
