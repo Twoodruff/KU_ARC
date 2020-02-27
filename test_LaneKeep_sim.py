@@ -8,7 +8,8 @@ Description: Test code for main with lane keeping.
 
 from ARClib.cam import camera
 from ARClib.image_process import ImageProcess
-from ARClib.tools import median, memory
+from ARClib.tools import median
+from ARClib.logger import ImageLogger
 
 import time
 import sys
@@ -31,7 +32,7 @@ cam = camera('one_line_data.avi')
 print("Camera fps: ",cam.fps)
 control = ImageProcess(detect=[115,150,160])
 medFilter = median(filter_size)
-mem = memory(filepath)
+mem = ImageLogger(filepath)
 
 # THREADS
 image_queue = queue.Queue()
