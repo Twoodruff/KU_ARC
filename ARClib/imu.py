@@ -138,7 +138,7 @@ class IMU:
         acc_y = []
         acc_z = []
         w_vel_z = []
-        init_time = 3
+        init_time = 4
         start = time.time()
         while time.time()<(start+init_time):
             self.run()
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     vely = []
     head = []
     gyro = []
-    seconds = 15
+    seconds = 30
     tim = np.linspace(0, seconds, num=10*seconds)
     for i in (tim):
         imu.run()

@@ -9,6 +9,7 @@ Description: Test code for main with lane keeping.
 from ARClib.moco import MotorController
 from ARClib.cam import camera
 from ARClib.image_process import ImageProcess
+from ARClib.lane_control import OneLine
 from ARClib.tools import median, memory
 
 import time
