@@ -15,8 +15,8 @@ fourcc = cv2.VideoWriter_fourcc(*"XVID")
 frame = vs.read()
 
 (h, w) = frame.shape[:2]
-filepath = Path("/home/pi/Documents/KU_ARC/testrun.avi")
-writer = cv2.VideoWriter("testrun2_b.avi", fourcc, 30, (w, h), True)
+# filepath = Path("/home/pi/Documents/KU_ARC/testrun.avi")
+writer = cv2.VideoWriter("one_line_data.avi", fourcc, 30, (w, h), True)
 zeros = np.zeros((h, w), dtype="uint8")
 
 print("Capturing video...")

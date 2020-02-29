@@ -15,23 +15,23 @@ import numpy as np
 import math
 
 from . import cam
-from .lane_control import TwoLines, MultiLine
+from .lane_control import TwoLines, MultiLine, OneLine
 
 
 class ImageProcess():
-    def __init__(self, detect = [255,0,0], color = [0,255,0]):
+    def __init__(self, P, I, D, detect = [255,0,0], color = [0,255,0]):
         '''
         Inputs:
             detect : color of lanes to detect in BGR
                      default is blue
-            color : color of display lines  in BGR
+            color : color of display lines in BGR
                     default is green
         '''
         det_color = np.uint8([[detect]])
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = TwoLines()
+        self.track  = OneLine(P, I, D)
 
 
     def run(self, frame):
@@ -51,7 +51,7 @@ class ImageProcess():
             self.height, self.width, _ = frame.shape
 
             # ROTATE FRAME
-            self.rot = cam.rotate(frame,180)
+            self.rot = frame  # cam.rotate(frame,180)
 
             # CROPPING IMAGE
             crop = np.zeros(self.rot.shape, dtype = 'uint8')
@@ -61,16 +61,19 @@ class ImageProcess():
             self.crop_im = cv2.bitwise_and(src1 = self.rot, src2 = crop)
 
             self.proj = cam.projective_warp(self.crop_im)
+            self.proj = cv2.GaussianBlur(self.proj, ksize=(5,5), sigmaX=25)
 
             # CONVERTING COLOR SPACE
             hsv = cv2.cvtColor(self.proj, cv2.COLOR_BGR2HSV)
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
-            lower = np.array([hue_center-25,30,70]) #bounds in hsv color space
-            upper = np.array([hue_center+25,255,255])
-            mask = cv2.inRange(hsv, lower, upper)
-            self.res = cv2.bitwise_and(hsv, hsv, mask = mask)
+            # lower = np.array([hue_center-5,30,70]) #bounds in hsv color space
+            # upper = np.array([hue_center+5,255,170])
+            lower = np.array([hue_center-20,50,50]) #bounds in hsv color space
+            upper = np.array([hue_center+20,255,255])
+            self.mask = cv2.inRange(hsv, lower, upper)
+            self.res = cv2.bitwise_and(hsv, hsv, mask = self.mask)
 
             # EDGE DETECTION
             self.edges = cv2.Canny(self.res,95,135)    #threshold parameters may need tuning for robustness
@@ -84,8 +87,10 @@ class ImageProcess():
             self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,threshold,minLineLength,maxLineGap)
 
             # LANE DETECTION
-            self.lanes = self.track.track(self.rot, self.lines)
+            self.lanes = self.track.track(self.mask)
+            print('Lane position: ',self.lanes)
             self.heading = self.track.control(self.lanes)
+            print('Heading: ',self.heading)
 
 
     def update(self):
@@ -99,15 +104,15 @@ class ImageProcess():
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
     def showRot(self, cam):
         # SHOW IMAGE AFTER ROTATION
-        cv2.imshow('Rotated', self.rot)
-        cam.show()
+        # cv2.imshow('Rotated', self.rot)
+        # cam.show()
         return self.rot
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
-        cv2.imshow('Color', self.res)
-        cam.show()
-        return self.res
+        # cv2.imshow('Color', self.res)
+        # cam.show()
+        return self.mask
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION

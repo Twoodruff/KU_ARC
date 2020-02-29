@@ -24,7 +24,7 @@ class camera():
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
             ret,frame = self.cam.read()
-            self.frame = undistortFishEye(frame)
+            self.frame = frame  # undistortFishEye(frame)
 
     def update(self):
         # RETURN FRAME
@@ -32,7 +32,7 @@ class camera():
 
     def show(self):
         # DISPLAY AN IMAGE/VIDEO STREAM
-        k = cv2.waitKey(0)
+        k = cv2.waitKey(1)
         if k == ord('q') & 0xFF:
             self.shutdown()
 

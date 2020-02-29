@@ -8,7 +8,8 @@ Description: Test code for main with lane keeping.
 
 from ARClib.cam import camera
 from ARClib.image_process import ImageProcess
-from ARClib.tools import median, memory
+from ARClib.tools import median
+from ARClib.logger import ImageLogger
 
 import time
 import sys
@@ -20,18 +21,18 @@ import queue
 drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
-filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
-#filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
+#filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
+filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 
 exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('testrun2.avi')
+cam = camera('one_line_data.avi')
 print("Camera fps: ",cam.fps)
-control = ImageProcess()
+control = ImageProcess(detect=[115,150,160])
 medFilter = median(filter_size)
-mem = memory(filepath)
+mem = ImageLogger(filepath)
 
 # THREADS
 image_queue = queue.Queue()
@@ -73,24 +74,24 @@ while not exit_flag:
         control.run(frame)
         heading = control.update()
         end = time.time_ns()
-        heading = medFilter.run(heading)
+        # heading = medFilter.run(heading)
         control_time = (end - start)/1e6
 
         # PREVENT OVERSTEERING
-        if (heading-prev_head) > 20:
-            head = prev_head + 20
-        elif (heading-prev_head) < -20:
-            head = prev_head - 20
-        else:
-            head = heading
-
+        # if (heading-prev_head) > 20:
+        #     head = prev_head + 20
+        # elif (heading-prev_head) < -20:
+        #     head = prev_head - 20
+        # else:
+        #     head = heading
+        head = heading
         # SHOW LANES
-        # control.showHeading(cam, head)
+        control.showHSV(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
         #image_queue.put((control.showHeading(cam, head), head, loop))
-        #image_queue.put((control.showHough(cam), head, loop))
+        image_queue.put((control.showRot(cam), head, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
         #print("queue size: ", image_queue.qsize())

@@ -11,6 +11,7 @@ import numpy as np
 import cv2
 import math
 from . import tools
+from .PID import PID
 
 class TwoLines:
     '''
@@ -353,30 +354,35 @@ class MultiLine():
 
 
 class OneLine():
-    from . import PID
-    def __init__(self):
-        pid = PID(0.5, 1, 0)
+    BLACK = 0
+    WHITE = 255
+    RANGE = 50
+    def __init__(self, P, I, D):
+        self.pid = PID(P, I, D, setpoint=0.5)
 
     def track(self, frame):
-        self.height, self.width, _ = frame.shape
+        self.height, self.width = frame.shape
         #get line position
-        lane = frame[self.width,:]
+        lane = frame[self.height-1,:]
         counter = 0
-        for i in len(lane):
-            if lane[i] == 255:
+        first = 0.5
+        for i in range(len(lane)):
+            if lane[i] == OneLine.WHITE:
                 counter = counter + 1
-                if counter = 1:
+                if counter == 1:
                     first = i
 
-        pos = first + (counter/2)
+        pos = (first + (counter/2))/self.width  # normalize reduce error value
         return pos
         #maybe use full line for future trajectory
 
     def control(self, position):
-        pid.setSP(self.width/2)
-        input = pid.update(position, 0.1)
+        #self.pid.setSP(self.width/2)
+        pid_input = self.pid.update(position, 0.1)
+        if pid_input > OneLine.RANGE:
+            OneLine.RANGE = pid_input
 
         #map input to steering command
-        steer_cmd = input
-        heading = steer_cmd
-        return input 
+        slope = 90/(2*OneLine.RANGE)
+        heading = (pid_input-(-OneLine.RANGE))*slope + 45
+        return int(180-heading-90)
