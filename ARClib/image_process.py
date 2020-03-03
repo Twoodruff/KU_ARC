@@ -19,7 +19,7 @@ from .lane_control import TwoLines, MultiLine, OneLine
 
 
 class ImageProcess():
-    def __init__(self, P, I, D, detect = [255,0,0], color = [0,255,0]):
+    def __init__(self, P=0, I=0, D=0, detect = [255,0,0], color = [0,255,0]):
         '''
         Inputs:
             detect : color of lanes to detect in BGR
@@ -31,7 +31,7 @@ class ImageProcess():
         self.detect_color = cv2.cvtColor(det_color, cv2.COLOR_BGR2HSV)
         self.line_color = color
         self.running = True
-        self.track  = OneLine(P, I, D)
+        self.track  = TwoLines()  # OneLine(P, I, D)
 
 
     def run(self, frame):
@@ -51,7 +51,7 @@ class ImageProcess():
             self.height, self.width, _ = frame.shape
 
             # ROTATE FRAME
-            self.rot = frame  # cam.rotate(frame,180)
+            self.rot = cam.rotate(frame,180)
 
             # CROPPING IMAGE
             crop = np.zeros(self.rot.shape, dtype = 'uint8')
@@ -60,18 +60,18 @@ class ImageProcess():
             cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             self.crop_im = cv2.bitwise_and(src1 = self.rot, src2 = crop)
 
-            self.proj = cam.projective_warp(self.crop_im)
-            self.proj = cv2.GaussianBlur(self.proj, ksize=(5,5), sigmaX=25)
+            # self.proj = cam.projective_warp(self.crop_im)
+            # self.proj = cv2.GaussianBlur(self.proj, ksize=(5,5), sigmaX=25)
 
             # CONVERTING COLOR SPACE
-            hsv = cv2.cvtColor(self.proj, cv2.COLOR_BGR2HSV)
+            hsv = cv2.cvtColor(self.crop_im, cv2.COLOR_BGR2HSV)
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
             # lower = np.array([hue_center-5,30,70]) #bounds in hsv color space
             # upper = np.array([hue_center+5,255,170])
-            lower = np.array([hue_center-20,50,50]) #bounds in hsv color space
-            upper = np.array([hue_center+20,255,255])
+            lower = np.array([hue_center-30,30,70]) #bounds in hsv color space
+            upper = np.array([hue_center+25,255,255])
             self.mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = self.mask)
 
@@ -87,10 +87,8 @@ class ImageProcess():
             self.lines = cv2.HoughLinesP(self.edges,rho_res,theta_res,threshold,minLineLength,maxLineGap)
 
             # LANE DETECTION
-            self.lanes = self.track.track(self.mask)
-            print('Lane position: ',self.lanes)
+            self.lanes = self.track.track(self.rot, self.lines)
             self.heading = self.track.control(self.lanes)
-            print('Heading: ',self.heading)
 
 
     def update(self):
@@ -104,15 +102,15 @@ class ImageProcess():
     # FUNCTIONS TO SHOW DIFFERENT IMAGES
     def showRot(self, cam):
         # SHOW IMAGE AFTER ROTATION
-        # cv2.imshow('Rotated', self.rot)
-        # cam.show()
+        cv2.imshow('Rotated', self.rot)
+        cam.show()
         return self.rot
 
     def showHSV(self, cam):
         # SHOW IMAGE AFTER COLOR FITLERING
-        # cv2.imshow('Color', self.res)
-        # cam.show()
-        return self.mask
+        cv2.imshow('Color', self.res)
+        cam.show()
+        return self.res
 
     def showEdge(self, cam):
         # SHOW IMAGE AFTER EDGE DETECTION
@@ -131,8 +129,8 @@ class ImageProcess():
             pass
 
         new = cv2.addWeighted(self.rot, 1, new, 1, 1)
-        # cv2.imshow('Hough', new)
-        # cam.show()
+        cv2.imshow('Hough', new)
+        cam.show()
         return new
 
     def showLanes(self, cam):
@@ -140,8 +138,8 @@ class ImageProcess():
         new = np.zeros_like(self.rot)
         if self.lanes is not None:
             for line in self.lanes:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
+                x1,y1,x2,y2 = line.lane(self.height, self.width)
+                cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
         else:
             pass
 
@@ -153,17 +151,17 @@ class ImageProcess():
     def showHeading(self, cam, heading):
         # SHOW IMAGE WITH DETECTED LANES & HEADING DIRECTION
         new = np.zeros_like(self.rot)
-        rad = heading/180.0*math.pi
+        rad = (heading/180.0)*math.pi
 
         if self.lanes is not None:
             x1 = int(self.width/2)
             y1 = self.height
             x2 = int(x1 + (self.height/2)*math.tan(rad))
-            y2 = self.top
+            y2 = int(self.top)
             cv2.line(new,(x1,y1),(x2,y2),[0,0,255],8)
             for line in self.lanes:
-                for x1,y1,x2,y2 in line:
-                    cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
+                x1,y1,x2,y2 = line.lane(self.height, self.width)
+                cv2.line(new,(x1,y1),(x2,y2),self.line_color,10)
         else:
             pass
 
@@ -179,7 +177,7 @@ if __name__ == "__main__":
     from tools import median
 
     camObj = cam.camera(0)
-    LaneDetect = LaneKeep()
+    LaneDetect = ImageProcess()
     medFilter = median(4)
     while(1):
         camObj.run()

@@ -96,55 +96,32 @@ class TwoLines:
         # CREATE LANES BASED ON AVG's
         #left lane
         if len(ll_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgll[0],avgll[1])
-            lane_line.append([left_lane])
+            left_lane = tools.line(avgll[0], avgll[1])
+            lane_line.append(left_lane)
         elif len(rl_s) > 0:
-            left_lane = self.lane(self.height,self.width,avgrl[0],avgrl[1])
-            lane_line.append([left_lane])
+            left_lane = tools.line(avgrl[0], avgrl[1])
+            lane_line.append(left_lane)
 
         #right lane
         if len(rr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avgrr[0],avgrr[1])
-            lane_line.append([right_lane])
+            right_lane = tools.line(avgrr[0], avgrr[1])
+            lane_line.append(right_lane)
         elif len(lr_s) > 0:
-            right_lane = self.lane(self.height,self.width,avglr[0],avglr[1])
-            lane_line.append([right_lane])
+            right_lane = tools.line(avglr[0], avglr[1])
+            lane_line.append(right_lane)
 
-        #print("lane lines", lane_line)     #debug
         return lane_line
-
-
-    def lane(self,ht,wt,slope,inter):
-        '''
-        Inputs:
-            ht,wt : size of image frame
-            slope : avg slope of lines
-            inter : avg intercept of lines
-
-        Function: helper function to compute lanes
-
-        Outputs:
-            lane : set of two (x,y) pairs that define
-                   a lane line
-        '''
-        y1 = ht
-        y2 = int(self.height*0.5)
-        x1 = max(-wt,min(2*wt,(y1-inter)/slope))
-        x2 = max(-wt,min(2*wt,(y2-inter)/slope))
-        lane = [int(x1),y1,int(x2),y2]
-        return lane
-
 
     def control(self, lanes):
         # COMPUTE HEADING ANGLE
         if len(lanes)>1:
             #if both lanes are detected, find the middle
-            _, _, x_left, _ = lanes[0][0]  #first row, first column
-            _, _, x_right, _ = lanes[1][0] #second row, first column
+            _, _, x_left, _ = lanes[0].lane(self.height, self.width)  #first row, first column
+            _, _, x_right, _ = lanes[1].lane(self.height, self.width) #second row, first column
             x_off = (x_left + x_right)/2 - int(self.width/2)  #offset from frame center
         elif len(lanes)>0:
             #if only one lane is detected
-            x1, _, x2, _ = lanes[0][0]
+            x1, _, x2, _ = lanes[0].lane(self.height, self.width)
             x_off = x2-x1
         else:
             #if no lanes are detected, use previous heading

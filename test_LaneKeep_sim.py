@@ -16,21 +16,22 @@ import sys
 from pathlib import Path
 import threading
 import queue
+import os
 
 # GLOBAL VARIABLES
 drivefreq = 10  # Hz
 dt = 1 / drivefreq  # sec
 
-#filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
-filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
+filepath = Path("C:/Users/jazzy/Documents/KU_ARC/") #personal/testing
+# filepath = Path("/home/pi/Documents/KU_ARC/") #RPi
 
 exit_flag = 0
 filter_size = 3
 
 # PART OBJECTS
-cam = camera('one_line_data.avi')
+cam = camera('testrun2_b.avi')
 print("Camera fps: ",cam.fps)
-control = ImageProcess(detect=[115,150,160])
+control = ImageProcess()
 medFilter = median(filter_size)
 mem = ImageLogger(filepath)
 
@@ -43,10 +44,11 @@ def memory_op():
             image = image_queue.get()
             mem.saveImage(image)
             image_queue.task_done()
-        except queue.Empty:
+        except image_queue.Empty():
+            print('Breaking from thread')
             break
 
-mem_thread = threading.Thread(target = memory_op)
+mem_thread = threading.Thread(target = memory_op, name='memory')
 mem_thread.start()
 
 # LOOP INITIALIZATIONS
@@ -74,24 +76,23 @@ while not exit_flag:
         control.run(frame)
         heading = control.update()
         end = time.time_ns()
-        # heading = medFilter.run(heading)
+        heading = medFilter.run(heading)
         control_time = (end - start)/1e6
 
         # PREVENT OVERSTEERING
-        # if (heading-prev_head) > 20:
-        #     head = prev_head + 20
-        # elif (heading-prev_head) < -20:
-        #     head = prev_head - 20
-        # else:
-        #     head = heading
-        head = heading
+        if (heading-prev_head) > 20:
+            head = prev_head + 20
+        elif (heading-prev_head) < -20:
+            head = prev_head - 20
+        else:
+            head = heading
+
         # SHOW LANES
-        control.showHSV(cam)
+        # control.showLanes(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
-        #image_queue.put((control.showHeading(cam, head), head, loop))
-        image_queue.put((control.showRot(cam), head, loop))
+        image_queue.put((control.showHeading(cam, head), head, loop))
         end = time.time_ns()
         mem_time = (end - start)/1e6
         #print("queue size: ", image_queue.qsize())
@@ -109,14 +110,22 @@ while not exit_flag:
 
 
     #if Ctrl-C is pressed, end everything
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, AttributeError):
         exit_flag = 1
         cam.shutdown()
         control.shutdown()
-        mem_thread.join(timeout=3)
         image_queue.join()
-        print(loop)
-        sys.exit(0)
+        mem_thread.join(timeout=3)
+        print('Loop count: ', loop)
         break
 
-sys.exit(0)
+print('System Exiting...')
+print('Queue size: ', image_queue.qsize())
+print('Threads alive: ', threading.enumerate())
+image_queue = None
+mem_thread = None
+cam = None
+control = None
+print('System Exited...')
+os._exit(0)
+# sys.exit(0)

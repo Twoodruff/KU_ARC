@@ -10,6 +10,7 @@ Description: module responsible for saving data
 import os
 from pathlib import Path
 from datetime import datetime
+import cv2 
 
 class DataLogger:
     '''
