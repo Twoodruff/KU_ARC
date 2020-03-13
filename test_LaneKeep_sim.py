@@ -88,7 +88,7 @@ while not exit_flag:
             head = heading
 
         # SHOW LANES
-        # control.showLanes(cam)
+        control.showLanes(cam)
 
         # SAVE IMAGE WITH HEADING FOR TROUBLESHOOTING
         start = time.time_ns()
@@ -110,7 +110,8 @@ while not exit_flag:
 
 
     #if Ctrl-C is pressed, end everything
-    except (KeyboardInterrupt, AttributeError):
+    except (KeyboardInterrupt, AttributeError) as err:
+        print(err)
         exit_flag = 1
         cam.shutdown()
         control.shutdown()
@@ -119,13 +120,11 @@ while not exit_flag:
         print('Loop count: ', loop)
         break
 
-print('System Exiting...')
 print('Queue size: ', image_queue.qsize())
 print('Threads alive: ', threading.enumerate())
+print('System Exiting...')
 image_queue = None
 mem_thread = None
 cam = None
 control = None
-print('System Exited...')
 os._exit(0)
-# sys.exit(0)

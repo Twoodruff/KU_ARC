@@ -54,23 +54,22 @@ class ImageProcess():
             self.rot = cam.rotate(frame,180)
 
             # CROPPING IMAGE
-            crop = np.zeros(self.rot.shape, dtype = 'uint8')
             n = 0.5   #determines how much of the frame is cropped in the vertical direction, from the top
             self.top = int(self.height*n)
+            crop = np.zeros(self.rot.shape, dtype = 'uint8')
             cv2.rectangle(crop, (0, self.top), (self.width, self.height), (255, 255, 255), -1)
             self.crop_im = cv2.bitwise_and(src1 = self.rot, src2 = crop)
 
-            # self.proj = cam.projective_warp(self.crop_im)
-            # self.proj = cv2.GaussianBlur(self.proj, ksize=(5,5), sigmaX=25)
+            # self.rot[0:self.top, 0:self.width] = 0
+            # self.proj = cv2.GaussianBlur(self.rot, ksize=(5,5), sigmaX=25)
+            # self.proj = cam.projective_warp(self.proj)
 
             # CONVERTING COLOR SPACE
             hsv = cv2.cvtColor(self.crop_im, cv2.COLOR_BGR2HSV)
 
             # COLOR DETECTION
             hue_center = self.detect_color[0][0][0]
-            # lower = np.array([hue_center-5,30,70]) #bounds in hsv color space
-            # upper = np.array([hue_center+5,255,170])
-            lower = np.array([hue_center-30,30,70]) #bounds in hsv color space
+            lower = np.array([hue_center-30,45,70]) #bounds in hsv color space
             upper = np.array([hue_center+25,255,255])
             self.mask = cv2.inRange(hsv, lower, upper)
             self.res = cv2.bitwise_and(hsv, hsv, mask = self.mask)

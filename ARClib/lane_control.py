@@ -15,13 +15,9 @@ from .PID import PID
 
 class TwoLines:
     '''
-    description of class
+    control based on finding two lanes with the Hough Transform
     '''
     def __init__(self):
-        '''
-        Inputs:
-            input1 : height, width
-        '''
         # INITIALIZE VARS
         self.prevxoff = 0
 
@@ -135,6 +131,9 @@ class TwoLines:
 
 
 class MultiLine():
+    '''
+    control based on finding multiple lane lines from Hough Transform
+    '''
     def __init__(self):
         self.prevxoff = 0
 
@@ -331,6 +330,9 @@ class MultiLine():
 
 
 class OneLine():
+    '''
+    Control based on tracking a single line
+    '''
     BLACK = 0
     WHITE = 255
     RANGE = 50
