@@ -1,7 +1,7 @@
 """
 File: cam.py
 Author: Thomas Woodruff
-Date: 11/11/19
+Date: 02/19/20
 Revision: 0.1
 Description: Utility functions for camera
              object.
@@ -18,13 +18,25 @@ class camera():
         # START CAMERA
         self.cam = cv2.VideoCapture(port)
         self.fps = self.cam.get(cv2.CAP_PROP_FPS)
+
+        # CONSTANTS FROM CALIBRATION
+        #computer
+        #K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
+        #D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
+        #rpi
+        K = np.array([[472.892,0.0,319.364],[0.0,474.471,271.360],[0.0,0.0,1.0]])
+        D = np.array([[-0.1570],[0.6792],[-2.1645],[2.1713]])
+
+        # PERFORM DISTORTION CORRECTION
+        self.map1, self.map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, (640,480), cv2.CV_16SC2)
+
         self.running = True
 
     def run(self):
         # CAPTURE A FRAME AND UNDISTORT
         if self.running:
             ret,frame = self.cam.read()
-            self.frame = undistortFishEye(frame)
+            self.frame = undistortFishEye(frame, self.map1, self.map2)
 
     def update(self):
         # RETURN FRAME
@@ -61,8 +73,9 @@ def rotate(image, angle):
 
 def projective_warp(img):
     dst_size=(640,480)
-    src=np.float32([(0.25,0.5),(0.80,0.5),(0,0),(1,0)])
-    dst=np.float32([(0,1), (1,1), (0,0), (1,0)])
+    src=np.float32([(0.25,0.5),(0.80,0.5),(0,1),(1,1)])
+    # dst=np.float32([(0,1), (1,1), (0,0), (1,0)])  #upside down
+    dst=np.float32([(0,0), (1,0), (0,1), (1,1)])  #right side up
 
     img_size = np.float32([img.shape[1],img.shape[0]])
     src = src * img_size
@@ -133,7 +146,7 @@ def getDistortionParams():
     print("D=np.array(" + str(D.tolist()) + ")")
 
 
-def undistortFishEye(image):
+def undistortFishEye(image, map1, map2):
     '''
     credit: https://medium.com/@kennethjiang/calibrate-fisheye-lens-using-opencv-333b05afa0b0
     '''
@@ -142,24 +155,34 @@ def undistortFishEye(image):
     #K = np.array([[351.485, 0.0, 320.894],[0.0,351.058,246.049],[0.0,0.0,1.0]])
     #D = np.array([[-0.0707],[-0.3549],[0.9277],[-0.6842]])
     #rpi
-    K = np.array([[472.892,0.0,319.364],[0.0,474.471,271.360],[0.0,0.0,1.0]])
-    D = np.array([[-0.1570],[0.6792],[-2.1645],[2.1713]])
+    # K = np.array([[472.892,0.0,319.364],[0.0,474.471,271.360],[0.0,0.0,1.0]])
+    # D = np.array([[-0.1570],[0.6792],[-2.1645],[2.1713]])
 
     # GET IMAGE SIZE
-    h,w = image.shape[:2]
-    DIM = (w,h)
+    # h,w = image.shape[:2]
+    # DIM = (w,h)
 
     # PERFORM DISTORTION CORRECTION
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+    # map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
     undistorted_img = cv2.remap(image, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
 
     return undistorted_img
 
 
 if __name__ == "__main__":
-    getDistortionParams()
-    #cam = camera(0)
-    #cam.run()
-    #undistort = cam.update()
-    #cv2.imshow("undistorted",undistort)
-    #cam.show()
+    # getDistortionParams()
+    # cam = camera(0)
+    cam = cv2.VideoCapture(0)
+    while(1):
+        #cam.run()
+        #undistort = cam.update()
+        ret,frame = cam.read()
+        undistort = undistortFishEye(frame)
+        cv2.imshow("undistorted",undistort)
+        #cam.show()
+        k = cv2.waitKey(1)
+        if k == ord('q') & 0xFF:
+            break
+
+    cam.release()
+    cv2.destroyAllWindows()

@@ -1,0 +1,10 @@
+#This file is a list of all the parameters used in the car 
+#organized by function
+
+#Motor Control
+
+#Image Processing
+
+#IMU
+
+#Lane Tracking / Control
