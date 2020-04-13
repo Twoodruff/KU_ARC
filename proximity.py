@@ -10,25 +10,41 @@ Description: Ultrasonic sensor thread, used to measure distance by sending 8 40k
 # IMPORTS
 import time
 from gpiozero import DistanceSensor
-from time import sleep
 
-class distance:
+class Distance:
 
     def __init__(self):
         self.sensor = DistanceSensor(23,24)
-       # INITIALIZE VARS
+        self.OUT = 0
         self.running = True
 
     def run(self):
         if self.running:
             while True:
-                print('Distance to the nearest object is', self.sensor.distance,'m')
+                print('Distance to the nearest object is',self.sensor.distance,'m')
                 self.OUT = self.sensor.distance
                 time.sleep(1)
-
+               
     def update(self):
         return self.OUT
 
-
     def shutdown(self):
         self.running = False
+       
+if __name__ == "__main__":
+    testing_dis = Distance()
+    loop = 0
+    try:
+        while True:
+            output = testing_dis.run()
+            output = testing_dis.update()
+            print("\nloop: ", loop)
+            print("Distance:",output, "m")
+            loop+=1
+    except KeyboardInterrupt:
+        testing_dis.shutdown()
+
+
+
+
+
